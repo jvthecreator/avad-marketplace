@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Avalie sua entrega — {{ order.codigo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="max-width: 840px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1 style="font-size: 26px; font-weight: 700; margin-bottom: 8px;">Avalie sua entrega</h1>
+    <p style="font-size: 14px; color: var(--text-muted);">
+      Sua avaliação é essencial para mantermos a comunidade segura e com alta reputação. Pedido <strong>{{ order.codigo }}</strong>
+    </p>
+  </div>
+
+  <form method="post" action="{% url 'orders:review' order.id %}" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="nota_vendedor" id="nota_vendedor" value="{{ form.nota_vendedor.value|default:0 }}">
+    <input type="hidden" name="nota_transporte" id="nota_transporte" value="{{ form.nota_transporte.value|default:0 }}">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+      <!-- BLOCO VENDEDOR -->
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: #142621; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700;">
+            🏪
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 700;">Vendedor</h3>
+            <div style="font-size: 13px; color: var(--text-muted);">{{ order.vendedor.profile.nome_loja|default:order.vendedor.profile.nome }}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Qual sua nota para o vendedor?</label>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="star-rating-widget" id="star-widget-seller">
+              <span class="star" data-value="1">☆</span>
+              <span class="star" data-value="2">☆</span>
+              <span class="star" data-value="3">☆</span>
+              <span class="star" data-value="4">☆</span>
+              <span class="star" data-value="5">☆</span>
+            </div>
+            <a href="#" id="clear-star-seller" style="font-size: 11px; color: var(--text-muted); text-decoration: underline;">Limpar nota (0 estrelas)</a>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.comentario_vendedor.id_for_label }}">Comentário (opcional)</label>
+          {{ form.comentario_vendedor }}
+        </div>
+      </div>
+
+      <!-- BLOCO EMPRESA DE TRANSPORTE (PARCEIRO LOGÍSTICO) -->
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: #2563EB; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700;">
+            🚚
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 700;">Empresa de Transporte</h3>
+            <div style="font-size: 13px; color: var(--text-muted);">{{ order.get_metodo_frete_display }}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Qual sua nota para a entrega e prazos?</label>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="star-rating-widget" id="star-widget-shipping">
+              <span class="star" data-value="1">☆</span>
+              <span class="star" data-value="2">☆</span>
+              <span class="star" data-value="3">☆</span>
+              <span class="star" data-value="4">☆</span>
+              <span class="star" data-value="5">☆</span>
+            </div>
+            <a href="#" id="clear-star-shipping" style="font-size: 11px; color: var(--text-muted); text-decoration: underline;">Limpar nota (0 estrelas)</a>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.comentario_transporte.id_for_label }}">Comentário (opcional)</label>
+          {{ form.comentario_transporte }}
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTÕES DE AÇÃO -->
+    <div style="display: flex; justify-content: center; gap: 16px;">
+      <button type="submit" class="btn btn-primary btn-lg" style="min-width: 220px;">
+        Enviar avaliação
+      </button>
+      <a href="{% url 'orders:my_orders' %}" class="btn btn-outline btn-lg">
+        Avaliar depois
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load avad_filters %}
+
+{% block title %}Perfil do Vendedor — {{ profile.nome_loja|default:profile.nome }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <!-- HEADER DO VENDEDOR -->
+  <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: #142621; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">
+        {{ profile.nome_loja|default:profile.nome|slice:":2"|upper }}
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+          <h1 style="font-size: 22px; font-weight: 700;">{{ profile.nome_loja|default:profile.nome }}</h1>
+          {% if profile.tem_cnpj %}
+            <span class="badge badge-success">LOJA OFICIAL</span>
+          {% endif %}
+          <span class="badge badge-primary">{{ pct_positivas }}% DE AVALIAÇÕES POSITIVAS</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted); display: flex; gap: 16px;">
+          <span>⭐ <strong>{{ avg_note }}</strong> ({{ total }} avaliações)</span>
+          <span>📦 <strong>{{ products.count }}</strong> anúncios ativos</span>
+          <span>📅 Membro desde {{ seller.date_joined|date:"M/Y" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <a href="#anuncios" class="btn btn-outline">Ver anúncios do vendedor</a>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
+  <!-- SIDEBAR: ESTATÍSTICAS DO VENDEDOR -->
+  <div>
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 class="card-title" style="margin-bottom: 16px;">Estatísticas do vendedor</h3>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 44px; font-weight: 800; color: var(--text-main); line-height: 1;">{{ avg_note }}</div>
+        <div style="color: #F59E0B; font-size: 18px; margin: 6px 0;">
+          {% for i in avg_note|to_int|stars_range %}★{% endfor %}
+          {% for i in avg_note|to_int|empty_stars_range %}☆{% endfor %}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">com base em {{ total }} avaliações</div>
+      </div>
+
+      <!-- BARRAS HORIZONTAIS 5★ a 1★ -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+        {% for star in "54321" %}
+          {% with star_num=star|to_int %}
+          {% with item=distribution|get_item:star_num %}
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+            <span style="width: 24px;">{{ star }}★</span>
+            <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; background: #F59E0B; width: {{ item.percent|default:0 }}%;"></div>
+            </div>
+            <span style="width: 32px; text-align: right; color: var(--text-muted);">{{ item.count|default:0 }}</span>
+          </div>
+          {% endwith %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 16px; font-size: 13px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: var(--text-muted);">Avaliações positivas (4 e 5★):</span>
+          <strong>{{ pct_positivas }}%</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Comentários detalhados:</span>
+          <strong>{{ com_comentario }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVALIAÇÕES E COMENTÁRIOS COM FILTROS -->
+  <div>
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+        <h3 class="card-title">Avaliações e comentários</h3>
+
+        <!-- FILTROS & ORDENAÇÃO -->
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: 4px; font-size: 12px;">
+            <a href="?filter=todas&sort={{ sort_by }}" class="btn btn-sm {% if filter_type == 'todas' %}btn-primary{% else %}btn-outline{% endif %}">TODAS</a>
+            <a href="?filter=com_comentario&sort={{ sort_by }}" class="btn btn-sm {% if filter_type == 'com_comentario' %}btn-primary{% else %}btn-outline{% endif %}">COM COMENTÁRIO</a>
+            <a href="?filter=5_estrelas&sort={{ sort_by }}" class="btn btn-sm {% if filter_type == '5_estrelas' %}btn-primary{% else %}btn-outline{% endif %}">5 ESTRELAS</a>
+            <a href="?filter=1_a_3&sort={{ sort_by }}" class="btn btn-sm {% if filter_type == '1_a_3' %}btn-primary{% else %}btn-outline{% endif %}">1 A 3 ESTRELAS</a>
+          </div>
+
+          <form method="get" style="display: inline-flex;">
+            <input type="hidden" name="filter" value="{{ filter_type }}">
+            <select name="sort" onchange="this.form.submit()" class="form-select" style="padding: 4px 8px; font-size: 12px;">
+              <option value="recentes" {% if sort_by == 'recentes' %}selected{% endif %}>Mais recentes</option>
+              <option value="maior" {% if sort_by == 'maior' %}selected{% endif %}>Maior nota</option>
+              <option value="menor" {% if sort_by == 'menor' %}selected{% endif %}>Menor nota</option>
+            </select>
+          </form>
+        </div>
+      </div>
+
+      <!-- LISTA DE AVALIAÇÕES -->
+      {% if reviews %}
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          {% for r in reviews %}
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-weight: 600; font-size: 14px;">{{ r.comprador.profile.nome|default:r.comprador.username }}</span>
+                  <span class="badge badge-success" style="font-size: 10px;">Compra verificada</span>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted);">{{ r.criado_em|date:"d/m/Y" }}</span>
+              </div>
+
+              <div style="color: #F59E0B; font-size: 14px; margin-bottom: 6px;">
+                {% for i in r.nota_vendedor|stars_range %}★{% endfor %}
+                {% for i in r.nota_vendedor|empty_stars_range %}☆{% endfor %}
+              </div>
+
+              {% if r.comentario_vendedor %}
+                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 8px;">
+                  {{ r.comentario_vendedor }}
+                </p>
+              {% endif %}
+
+              <div style="font-size: 12px; color: var(--text-muted);">
+                Item: <strong>{{ r.pedido.produto.titulo }}</strong> &bull; Nota transporte: {{ r.nota_transporte }}★
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="padding: 32px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          Nenhuma avaliação encontrada com estes filtros.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ANÚNCIOS DO VENDEDOR -->
+    <div id="anuncios" class="card">
+      <h3 class="card-title" style="margin-bottom: 16px;">Anúncios da Loja</h3>
+      <div class="product-grid">
+        {% for p in products %}
+          <div class="product-card">
+            <div class="product-img-wrap">
+              {% if p.frete_gratis %}
+                <span class="badge badge-success product-badge-float">FRETE GRÁTIS</span>
+              {% endif %}
+              {% if p.imagem %}
+                <img src="{{ p.imagem.url }}" alt="{{ p.titulo }}" class="product-img">
+              {% else %}
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #E5E7EB; color: #9CA3AF; font-size: 13px;">Sem imagem</div>
+              {% endif %}
+            </div>
+            <div class="product-info">
+              <h4 class="product-title">{{ p.titulo }}</h4>
+              <div class="product-price">R$ {{ p.preco }}</div>
+              <a href="{% url 'catalog:product_detail' p.id %}" class="btn btn-outline btn-sm" style="margin-top: 12px;">Ver anúncio</a>
+            </div>
+          </div>
+        {% empty %}
+          <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-muted);">
+            Nenhum outro anúncio no momento.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Acompanhar Entrega — {{ order.codigo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  <span>Rastreio de {{ order.codigo }}</span>
+</div>
+
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700;">Acompanhar Entrega</h1>
+    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+      Pedido: <strong>{{ order.codigo }}</strong> &bull; Código de Rastreio: <code>{{ order.codigo_rastreio }}</code>
+    </div>
+  </div>
+
+  <div>
+    <span class="badge badge-{{ order.status_display_badge.1 }}" style="font-size: 13px; padding: 6px 12px;">
+      {{ order.status_display_badge.0 }}
+    </span>
+  </div>
+</div>
+
+<!-- STEPPER HORIZONTAL DE 5 ESTADOS -->
+<div class="card" style="margin-bottom: 24px; padding: 24px 16px;">
+  <div class="stepper-horizontal">
+    <div class="stepper-track">
+      <div class="stepper-track-fill" style="width: {% if order.status == 'aguardando_pagamento' %}0%{% elif order.status == 'aguardando_confirmacao' %}25%{% elif order.status == 'preparando' %}50%{% elif order.status == 'a_caminho' %}75%{% elif order.status == 'entregue' %}100%{% else %}0%{% endif %};"></div>
+    </div>
+
+    <div class="stepper-step {% if order.status_step >= 0 %}completed{% endif %}">
+      <div class="step-circle">1</div>
+      <div class="step-label">Aguardando pagamento</div>
+    </div>
+
+    <div class="stepper-step {% if order.status_step >= 1 %}completed{% elif order.status_step == 0 %}active{% endif %}">
+      <div class="step-circle">2</div>
+      <div class="step-label">Confirmação vendedor</div>
+    </div>
+
+    <div class="stepper-step {% if order.status_step >= 2 %}completed{% elif order.status_step == 1 %}active{% endif %}">
+      <div class="step-circle">3</div>
+      <div class="step-label">Preparando envio</div>
+    </div>
+
+    <div class="stepper-step {% if order.status_step >= 3 %}completed{% elif order.status_step == 2 %}active{% endif %}">
+      <div class="step-circle">4</div>
+      <div class="step-label">Item a caminho</div>
+    </div>
+
+    <div class="stepper-step {% if order.status_step >= 4 %}completed{% elif order.status_step == 3 %}active{% endif %}">
+      <div class="step-circle">5</div>
+      <div class="step-label">Item entregue</div>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 360px; gap: 24px;">
+  <!-- HISTÓRICO VERTICAL DE RASTREIO -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Histórico de Rastreamento</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Atualizado pelo Parceiro Logístico AVaD</span>
+      </div>
+
+      <div class="timeline-vertical" style="margin-top: 16px;">
+        {% for event in events %}
+          <div class="timeline-item">
+            <div class="timeline-bullet"></div>
+            <div class="timeline-time">{{ event.data_hora|date:"d/m/Y \à\s H:i" }} {% if event.local %}&bull; {{ event.local }}{% endif %}</div>
+            <div class="timeline-title">{{ event.titulo }}</div>
+            {% if event.descricao %}
+              <div class="timeline-desc">{{ event.descricao }}</div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div style="color: var(--text-muted); font-size: 13px;">Aguardando os primeiros eventos de transporte.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUNA LATERAL: PREVISÃO, ENDEREÇO E RESUMO -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- CARD PREVISÃO -->
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 12px;">Entrega prevista</h3>
+      <div style="font-size: 20px; font-weight: 700; color: #10B981; margin-bottom: 4px;">
+        {{ previsao_entrega|date:"d \d\e F \d\e Y" }}
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted);">
+        Método: <strong>{{ order.get_metodo_frete_display }}</strong> (Prazo: {{ order.prazo_dias }} dias úteis)
+      </div>
+    </div>
+
+    <!-- CARD ENDEREÇO -->
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 12px;">Endereço de entrega</h3>
+      <p style="font-size: 13px; line-height: 1.5; color: var(--text-main);">
+        {{ order.endereco_entrega }}
+      </p>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+        CEP: {{ order.cep_entrega }}
+      </div>
+    </div>
+
+    <!-- CARD RESUMO DO ITEM -->
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 12px;">Resumo do pedido</h3>
+      <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div style="width: 50px; height: 50px; background: #F3F4F6; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;">
+          {% if order.produto.imagem %}
+            <img src="{{ order.produto.imagem.url }}" alt="{{ order.produto.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% endif %}
+        </div>
+        <div style="font-size: 13px;">
+          <strong>{{ order.produto.titulo }}</strong>
+          <div style="color: var(--text-muted);">{{ order.quantidade }}x R$ {{ order.preco_unitario }}</div>
+        </div>
+      </div>
+
+      <div style="font-size: 13px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between;">
+        <span>Total pago:</span>
+        <strong>R$ {{ order.valor_total }}</strong>
+      </div>
+
+      {% if order.status == 'entregue' and not order.recebimento_confirmado %}
+        <div style="margin-top: 16px;">
+          <a href="{% url 'orders:confirm_receipt' order.id %}" class="btn btn-success btn-block btn-sm">Confirmar Recebimento</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

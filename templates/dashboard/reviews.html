@@ -1,0 +1,47 @@
+{% extends "dashboard/base_seller.html" %}
+{% load avad_filters %}
+
+{% block title %}Avaliações da Loja — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700;">Avaliações dos Clientes</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Feedback dos compradores sobre atendimento e produtos entregues</p>
+</div>
+
+<div class="card">
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    {% for r in reviews %}
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong style="font-size: 14px;">{{ r.comprador.profile.nome|default:r.comprador.username }}</strong>
+            <span class="badge badge-success" style="font-size: 10px;">Compra Verificada</span>
+          </div>
+          <span style="font-size: 12px; color: var(--text-muted);">{{ r.criado_em|date:"d/m/Y H:i" }}</span>
+        </div>
+
+        <div style="color: #F59E0B; font-size: 14px; margin-bottom: 6px;">
+          {% for i in r.nota_vendedor|stars_range %}★{% endfor %}
+          {% for i in r.nota_vendedor|empty_stars_range %}☆{% endfor %}
+          <span style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">(Nota Vendedor: {{ r.nota_vendedor }} &bull; Transporte: {{ r.nota_transporte }}★)</span>
+        </div>
+
+        {% if r.comentario_vendedor %}
+          <p style="font-size: 13px; color: var(--text-main); margin-bottom: 6px;">
+            "{{ r.comentario_vendedor }}"
+          </p>
+        {% endif %}
+
+        <div style="font-size: 12px; color: var(--text-muted);">
+          Pedido: <strong>{{ r.pedido.codigo }}</strong> &bull; Item: {{ r.pedido.produto.titulo }}
+        </div>
+      </div>
+    {% empty %}
+      <div style="text-align: center; padding: 32px; color: var(--text-muted);">
+        Nenhuma avaliação recebida até o momento.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

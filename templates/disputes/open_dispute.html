@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Abrir Disputa — {{ order.codigo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  <span>Abrir Disputa</span>
+</div>
+
+<div style="max-width: 760px; margin: 0 auto;">
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Câmara de Mediação AVaD — Abrir Disputa</h1>
+    <p style="font-size: 14px; color: var(--text-muted);">
+      Abertura formal de conflito para resolução assistida pelo Suporte de Vendas.
+    </p>
+  </div>
+
+  <!-- AVISO DAS REGRAS -->
+  <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px;">
+    <div style="display: flex; gap: 12px;">
+      <span style="font-size: 24px;">⚖️</span>
+      <div style="font-size: 13px; color: #1E3A8A; line-height: 1.6;">
+        <strong style="font-size: 14px; display: block; margin-bottom: 4px;">Regras do Procedimento de Mediação:</strong>
+        <ul style="padding-left: 18px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+          <li><strong>Bloqueio Imediato:</strong> Ao abrir esta disputa, o repasse financeiro ao vendedor é automaticamente bloqueado em custódia (escrow).</li>
+          <li><strong>Prazo de Resposta (SLA):</strong> As partes têm até <strong>48 horas</strong> para anexar manifestações e provas.</li>
+          <li><strong>Decisão Vinculante:</strong> O Mediador do Suporte de Vendas emitirá decisão fundamentada caso não haja acordo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMULÁRIO -->
+  <div class="card">
+    <div style="display: flex; gap: 14px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+      <div style="width: 50px; height: 50px; background: #F3F4F6; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;">
+        {% if order.produto.imagem %}
+          <img src="{{ order.produto.imagem.url }}" alt="{{ order.produto.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+        {% endif %}
+      </div>
+      <div>
+        <strong>{{ order.produto.titulo }}</strong>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Pedido {{ order.codigo }} &bull; Total: R$ {{ order.valor_total }} &bull; Vendedor: {{ order.vendedor.profile.nome_loja|default:order.vendedor.profile.nome }}
+        </div>
+      </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.motivo.id_for_label }}">Motivo da disputa *</label>
+        {{ form.motivo }}
+        {% if form.motivo.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.motivo.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.descricao.id_for_label }}">Descreva o problema detalhadamente *</label>
+        {{ form.descricao }}
+        {% if form.descricao.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.descricao.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.evidencia.id_for_label }}">Evidência inicial (JPG, PNG, MP4 até 10 MB)</label>
+        {{ form.evidencia }}
+        {% if form.evidencia.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.evidencia.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+          Abrir Disputa e Bloquear Custódia
+        </button>
+        <a href="{% url 'orders:my_orders' %}" class="btn btn-outline btn-lg">
+          Cancelar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Disputas & Mediação — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700;">Disputas & Mediação de Vendas</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Acompanhe contestações de compradores e anexe contraprovas e notas fiscais</p>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>DISPUTA</th>
+        <th>PEDIDO</th>
+        <th>COMPRADOR</th>
+        <th>MOTIVO</th>
+        <th>SLA RESTANTE</th>
+        <th>STATUS</th>
+        <th>AÇÃO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in disputes %}
+        <tr>
+          <td><strong>{{ d.codigo }}</strong></td>
+          <td>{{ d.pedido.codigo }}</td>
+          <td>{{ d.comprador.profile.nome|default:d.comprador.username }}</td>
+          <td>{{ d.motivo }}</td>
+          <td><span class="badge badge-info">{{ d.sla_restante }}</span></td>
+          <td>
+            <span class="badge {% if d.status == 'em_analise' %}badge-warning{% elif d.status == 'decidida_comprador' %}badge-danger{% else %}badge-success{% endif %}">
+              {{ d.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'disputes:dispute_detail' d.id %}" class="btn btn-outline btn-sm">
+              Ver e Responder &rarr;
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+            Nenhuma disputa aberta para sua loja no momento. Ótimo trabalho!
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

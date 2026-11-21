@@ -1,0 +1,118 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Gerenciamento de Pedidos — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700;">Gestão de Pedidos</h1>
+    <p style="font-size: 13px; color: var(--text-muted);">Avance os status logísticos e gerencie solicitações de reembolso</p>
+  </div>
+</div>
+
+<!-- FILTROS DE STATUS -->
+<div class="card" style="margin-bottom: 24px; padding: 14px 20px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px;">
+    <a href="?" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline{% endif %}">Todos</a>
+    <a href="?status=aguardando_confirmacao" class="btn btn-sm {% if status_filter == 'aguardando_confirmacao' %}btn-primary{% else %}btn-outline{% endif %}">Aguardando Confirmação</a>
+    <a href="?status=preparando" class="btn btn-sm {% if status_filter == 'preparando' %}btn-primary{% else %}btn-outline{% endif %}">Preparando</a>
+    <a href="?status=a_caminho" class="btn btn-sm {% if status_filter == 'a_caminho' %}btn-primary{% else %}btn-outline{% endif %}">A Caminho</a>
+    <a href="?status=entregue" class="btn btn-sm {% if status_filter == 'entregue' %}btn-primary{% else %}btn-outline{% endif %}">Entregues</a>
+    <a href="?status=cancelado" class="btn btn-sm {% if status_filter == 'cancelado' %}btn-primary{% else %}btn-outline{% endif %}">Cancelados</a>
+  </div>
+</div>
+
+<!-- TABELA DE PEDIDOS -->
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>PEDIDO</th>
+        <th>COMPRADOR</th>
+        <th>PRODUTO</th>
+        <th>QTD</th>
+        <th>VALOR</th>
+        <th>STATUS ATUAL</th>
+        <th>AÇÕES LOGÍSTICAS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+        <tr>
+          <td>
+            <strong>{{ order.codigo }}</strong>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ order.criado_em|date:"d/m/Y H:i" }}</div>
+          </td>
+          <td>
+            {{ order.comprador.profile.nome|default:order.comprador.username }}
+            <div style="font-size: 11px; color: var(--text-muted);">{{ order.cep_entrega }}</div>
+          </td>
+          <td>
+            <div style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {{ order.produto.titulo }}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ order.get_metodo_frete_display }}</div>
+          </td>
+          <td>{{ order.quantidade }}</td>
+          <td>
+            <strong>R$ {{ order.valor_total }}</strong>
+            {% if order.split %}
+              <div style="font-size: 11px; color: #10B981;">Líquido: R$ {{ order.split.valor_liquido_vendedor }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-{{ order.status_display_badge.1 }}">
+              {{ order.status_display_badge.0 }}
+            </span>
+
+            {% if order.refund_requests.exists %}
+              {% with last_ref=order.refund_requests.first %}
+                <div style="margin-top: 6px;">
+                  <span class="badge badge-danger" style="font-size: 9px;">Reembolso: {{ last_ref.get_status_display }}</span>
+                  {% if last_ref.status == 'solicitacao_enviada' %}
+                    <div style="display: flex; gap: 4px; margin-top: 4px;">
+                      <a href="{% url 'orders:refund_action' last_ref.id 'aprovar' %}" class="btn btn-success btn-sm" style="font-size: 10px; padding: 2px 6px;">Aprovar</a>
+                      <a href="{% url 'orders:refund_action' last_ref.id 'negar' %}" class="btn btn-danger btn-sm" style="font-size: 10px; padding: 2px 6px;">Negar</a>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endwith %}
+            {% endif %}
+          </td>
+          <td>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              {% if order.status == 'aguardando_confirmacao' %}
+                <a href="{% url 'orders:advance_status' order.id %}?status=preparando" class="btn btn-primary btn-sm">
+                  Confirmar pedido &rarr;
+                </a>
+              {% elif order.status == 'preparando' %}
+                <a href="{% url 'orders:advance_status' order.id %}?status=a_caminho" class="btn btn-info btn-sm">
+                  Despachar / Item a caminho &rarr;
+                </a>
+              {% elif order.status == 'a_caminho' %}
+                <a href="{% url 'orders:advance_status' order.id %}?status=entregue" class="btn btn-success btn-sm">
+                  Simular entrega concluída &rarr;
+                </a>
+              {% elif order.status == 'entregue' %}
+                <span style="font-size: 12px; color: #059669; font-weight: 600;">✓ Entregue</span>
+              {% else %}
+                <span style="font-size: 12px; color: var(--text-muted);">-</span>
+              {% endif %}
+
+              <a href="{% url 'orders:tracking' order.id %}" class="btn btn-outline btn-sm" style="font-size: 11px;">
+                Ver rastreio
+              </a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+            Nenhum pedido encontrado.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

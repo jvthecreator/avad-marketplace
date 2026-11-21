@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AVaD — Assurance, Value and Dealing{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="{% url 'home' %}" class="logo">
+        <span>AVaD</span>
+        <span class="logo-tag">Marketplace</span>
+      </a>
+
+      <form action="{% url 'catalog:product_list' %}" method="get" class="search-form">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="search-input" placeholder="Buscar produtos, marcas e serviços...">
+      </form>
+
+      <nav class="nav-links">
+        <a href="{% url 'catalog:product_list' %}" class="nav-link">Catálogo</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'orders:my_orders' %}" class="nav-link">Meus Pedidos</a>
+          {% if user.profile.is_mediador %}
+            <a href="{% url 'disputes:mediation_panel' %}" class="nav-link" style="color: #2563EB; font-weight: 600;">Painel de Mediação</a>
+          {% endif %}
+          {% if user.profile.tem_cnpj or user.products.exists or request.session.tipo_usuario == 'vendedor' %}
+            <a href="{% url 'dashboard:overview' %}" class="btn btn-outline btn-sm">Área do Vendedor</a>
+          {% endif %}
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 13px; font-weight: 600;">{{ user.profile.nome|default:user.username }}</span>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm">Sair</a>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-sm">Entrar</a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Cadastre-se</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- ALERT MESSAGES -->
+  {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- MAIN CONTENT -->
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <strong>AVaD</strong> — Assurance, Value and Dealing &copy; 2026. Todos os direitos reservados.
+      </div>
+      <div style="display: flex; gap: 16px;">
+        <a href="#">Termos e Condições (T&Cs)</a>
+        <a href="#">Privacidade</a>
+        <a href="#">Central de Segurança & Custódia</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

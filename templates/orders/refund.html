@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Pedir Reembolso — {{ order.codigo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  <span>Reembolso do pedido {{ order.codigo }}</span>
+</div>
+
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Solicitar Reembolso</h1>
+    <p style="font-size: 14px; color: var(--text-muted);">
+      Sua compra está protegida pelo programa de Garantia e Devolução do AVaD.
+    </p>
+  </div>
+
+  <form method="post" action="{% url 'orders:refund' order.id %}" novalidate>
+    {% csrf_token %}
+
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px;">
+      <!-- FORMULÁRIO -->
+      <div class="card">
+        <!-- ITEM -->
+        <div style="display: flex; gap: 14px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+          <div style="width: 64px; height: 64px; background: #F3F4F6; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;">
+            {% if order.produto.imagem %}
+              <img src="{{ order.produto.imagem.url }}" alt="{{ order.produto.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+          </div>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 600;">{{ order.produto.titulo }}</h3>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Pedido {{ order.codigo }} &bull; Qtd: {{ order.quantidade }} &bull; Vendedor: {{ order.vendedor.profile.nome_loja|default:order.vendedor.profile.nome }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.motivo.id_for_label }}">Motivo do reembolso *</label>
+          {{ form.motivo }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.comentario.id_for_label }}">Comentário (opcional)</label>
+          {{ form.comentario }}
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            Pedir reembolso
+          </button>
+          <a href="{% url 'orders:my_orders' %}" class="btn btn-outline">
+            Cancelar
+          </a>
+        </div>
+      </div>
+
+      <!-- CARD LATERAL: VALOR A SER REEMBOLSADO -->
+      <div>
+        <div class="card" style="position: sticky; top: 80px;">
+          <h3 class="card-title" style="margin-bottom: 16px;">Valor a ser reembolsado</h3>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Produto:</span>
+              <span>R$ {{ order.preco_unitario }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Frete:</span>
+              <span>R$ {{ order.valor_frete }}</span>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between; font-weight: 700; font-size: 16px;">
+              <span>Total:</span>
+              <span style="color: #10B981;">R$ {{ order.valor_total }}</span>
+            </div>
+          </div>
+
+          <div style="background: #F9FAFB; padding: 12px; border-radius: var(--radius-md); font-size: 12px; color: var(--text-muted);">
+            <div><strong>Forma de devolução:</strong></div>
+            <div>Mesmo meio original ({{ order.get_forma_pagamento_display }})</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

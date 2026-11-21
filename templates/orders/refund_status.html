@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Protocolo de Reembolso {{ refund.protocolo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  <span>Protocolo {{ refund.protocolo }}</span>
+</div>
+
+<div style="max-width: 680px; margin: 0 auto;">
+  <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
+    <div style="font-size: 40px; margin-bottom: 12px;">💸</div>
+    <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 6px;">Solicitação de Reembolso Registrada</h1>
+    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+      Protocolo: <strong style="color: var(--primary); font-size: 16px;">{{ refund.protocolo }}</strong>
+    </p>
+
+    <div style="display: inline-block; background: #ECFDF5; border: 1px solid #10B981; border-radius: var(--radius-md); padding: 8px 20px; font-size: 18px; font-weight: 700; color: #065F46; margin-bottom: 20px;">
+      Valor a receber: R$ {{ refund.valor_reembolso }}
+    </div>
+
+    <div style="font-size: 13px; color: var(--text-muted);">
+      Pedido associado: <strong>{{ order.codigo }}</strong> &bull; Produto: {{ order.produto.titulo }}
+    </div>
+  </div>
+
+  <!-- STEPPER VERTICAL DE REEMBOLSO -->
+  <div class="card" style="padding: 24px;">
+    <h3 class="card-title" style="margin-bottom: 20px;">Status da Devolução</h3>
+
+    <div class="timeline-vertical">
+      <!-- ETAPA 1 -->
+      <div class="timeline-item">
+        <div class="timeline-bullet" style="background: #10B981; border-color: #10B981;"></div>
+        <div class="timeline-title" style="font-weight: 700;">Solicitação enviada</div>
+        <div class="timeline-desc">Seu pedido de devolução foi recebido e registrado em nosso sistema.</div>
+      </div>
+
+      <!-- ETAPA 2 -->
+      <div class="timeline-item">
+        <div class="timeline-bullet" style="{% if refund.status != 'solicitacao_enviada' %}background: #10B981; border-color: #10B981;{% else %}background: #FFFFFF; border-color: #D1D5DB;{% endif %}"></div>
+        <div class="timeline-title" style="{% if refund.status != 'solicitacao_enviada' %}font-weight: 700;{% else %}color: var(--text-muted);{% endif %}">
+          Vendedor e banco notificados
+        </div>
+        <div class="timeline-desc">A loja parceira e a instituição emissora foram notificadas do pedido de estorno.</div>
+      </div>
+
+      <!-- ETAPA 3 -->
+      <div class="timeline-item">
+        <div class="timeline-bullet" style="{% if refund.status in 'estorno_processamento,valor_devolvido' %}background: #10B981; border-color: #10B981;{% else %}background: #FFFFFF; border-color: #D1D5DB;{% endif %}"></div>
+        <div class="timeline-title" style="{% if refund.status in 'estorno_processamento,valor_devolvido' %}font-weight: 700;{% else %}color: var(--text-muted);{% endif %}">
+          Estorno em processamento
+        </div>
+        <div class="timeline-desc">O split original foi suspenso e o valor está em estorno na adquirente.</div>
+      </div>
+
+      <!-- ETAPA 4 -->
+      <div class="timeline-item">
+        <div class="timeline-bullet" style="{% if refund.status == 'valor_devolvido' %}background: #10B981; border-color: #10B981;{% elif refund.status == 'negado' %}background: #DC2626; border-color: #DC2626;{% else %}background: #FFFFFF; border-color: #D1D5DB;{% endif %}"></div>
+        <div class="timeline-title" style="{% if refund.status == 'valor_devolvido' %}font-weight: 700; color: #065F46;{% elif refund.status == 'negado' %}font-weight: 700; color: #DC2626;{% else %}color: var(--text-muted);{% endif %}">
+          {% if refund.status == 'negado' %}Negado pelo vendedor{% else %}Valor devolvido{% endif %}
+        </div>
+        <div class="timeline-desc">
+          {% if refund.status == 'negado' %}
+            O vendedor recusou o pedido de reembolso. Caso discorde, você pode abrir uma disputa formal.
+          {% else %}
+            Crédito estornado no mesmo meio de pagamento utilizado na compra.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+      <a href="{% url 'orders:my_orders' %}" class="btn btn-outline">Voltar para Meus Pedidos</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

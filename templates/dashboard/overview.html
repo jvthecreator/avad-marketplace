@@ -1,0 +1,260 @@
+{% extends "dashboard/base_seller.html" %}
+{% load avad_filters %}
+
+{% block title %}Visão Geral — Dashboard do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<!-- CABEÇALHO DO DASHBOARD -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
+  <div>
+    <h1 style="font-size: 26px; font-weight: 800; color: var(--text-main);">Olá, {{ profile.nome|default:user.username }}!</h1>
+    <p style="font-size: 14px; color: var(--text-muted);">Aqui está o panorama financeiro e operacional da sua loja hoje.</p>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <select class="form-select" style="width: auto; padding: 8px 14px; font-size: 13px;">
+      <option value="ano_atual">Ano de 2026</option>
+      <option value="mes_atual">Este Mês</option>
+      <option value="ultimos_30">Últimos 30 dias</option>
+    </select>
+    <a href="{% url 'catalog:product_create' %}" class="btn btn-success">+ Nova oferta</a>
+  </div>
+</div>
+
+<!-- 5 CARDS DE KPIS COMPARATIVOS -->
+<div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
+  <!-- VENDAS NO ANO -->
+  <div class="kpi-card">
+    <div class="kpi-title">Vendas no ano</div>
+    <div class="kpi-val">R$ {{ vendas_ano }}</div>
+    <div class="kpi-badge positive">↑ +18,4% vs ano anterior</div>
+  </div>
+
+  <!-- VENDAS NO MÊS -->
+  <div class="kpi-card">
+    <div class="kpi-title">Vendas no mês</div>
+    <div class="kpi-val">R$ {{ vendas_mes }}</div>
+    <div class="kpi-badge positive">↑ +12,1% vs mês anterior</div>
+  </div>
+
+  <!-- VENDAS NA SEMANA -->
+  <div class="kpi-card">
+    <div class="kpi-title">Vendas na semana</div>
+    <div class="kpi-val">R$ {{ vendas_semana }}</div>
+    <div class="kpi-badge positive">↑ +5,8% vs semana anterior</div>
+  </div>
+
+  <!-- RECEITA LÍQUIDA -->
+  <div class="kpi-card">
+    <div class="kpi-title">Receita líquida</div>
+    <div class="kpi-val" style="color: #059669;">R$ {{ receita_liquida }}</div>
+    <div class="kpi-badge positive">Taxa de split: 93,5%</div>
+  </div>
+
+  <!-- PEDIDOS -->
+  <div class="kpi-card">
+    <div class="kpi-title">Pedidos</div>
+    <div class="kpi-val">{{ total_pedidos }}</div>
+    <div class="kpi-badge positive">↑ +8 novos pedidos</div>
+  </div>
+</div>
+
+<!-- GRÁFICO DE EVOLUÇÃO E AVALIAÇÕES -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+  <!-- GRÁFICO INTERATIVO DE LINHA -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">Evolução das vendas</h3>
+        <div style="font-size: 12px; color: var(--text-muted);">Receita bruta mensal: Ano Atual (verde) vs Ano Anterior (cinza tracejado)</div>
+      </div>
+      <div style="display: flex; gap: 12px; font-size: 12px;">
+        <span style="display: flex; align-items: center; gap: 4px;">
+          <span style="width: 12px; height: 3px; background: #10B981; display: inline-block;"></span> 2026
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px;">
+          <span style="width: 12px; height: 3px; background: #94A3B8; display: inline-block;"></span> 2025
+        </span>
+      </div>
+    </div>
+
+    <div style="width: 100%; height: 260px; position: relative;">
+      <canvas id="salesEvolutionChart" width="650" height="250" style="width: 100%; height: 100%;"></canvas>
+    </div>
+  </div>
+
+  <!-- CARD AVALIAÇÕES -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Avaliações</h3>
+      <a href="{% url 'dashboard:reviews' %}" style="font-size: 12px; color: var(--accent-blue);">Ver todas</a>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+      <div style="font-size: 38px; font-weight: 800; color: var(--text-main); line-height: 1;">{{ avg_note }}</div>
+      <div>
+        <div style="color: #F59E0B; font-size: 16px;">
+          {% for i in avg_note|to_int|stars_range %}★{% endfor %}
+          {% for i in avg_note|to_int|empty_stars_range %}☆{% endfor %}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">Baseado em {{ total_rev }} avaliações</div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUIÇÃO POR ESTRELAS -->
+    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px;">
+      {% for star in "54321" %}
+        {% with star_num=star|to_int %}
+        {% with item=dist_stars|get_item:star_num %}
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+            <span style="width: 18px;">{{ star }}★</span>
+            <div style="flex: 1; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden;">
+              <div style="height: 100%; background: #F59E0B; width: {{ item.percent|default:0 }}%;"></div>
+            </div>
+            <span style="width: 24px; text-align: right; color: var(--text-muted);">{{ item.count|default:0 }}</span>
+          </div>
+        {% endwith %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <!-- ÚLTIMO COMENTÁRIO -->
+    {% if ultimo_comentario %}
+      <div style="background: #F9FAFB; padding: 10px; border-radius: var(--radius-md); font-size: 12px; border: 1px solid var(--border-color);">
+        <div style="font-weight: 600; margin-bottom: 2px;">{{ ultimo_comentario.comprador.profile.nome|default:ultimo_comentario.comprador.username }}:</div>
+        <div style="color: var(--text-muted); font-style: italic;">"{{ ultimo_comentario.comentario_vendedor|truncatechars:70 }}"</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- SEÇÃO: MAIS VENDIDOS E INSIGHTS RÁPIDOS -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+  <!-- CARD MAIS VENDIDOS -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Mais vendidos (últimos 30 dias)</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">Top 5</span>
+    </div>
+
+    {% if mais_vendidos %}
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for item in mais_vendidos %}
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="width: 20px; font-weight: 700; color: var(--text-muted);">#{{ forloop.counter }}</span>
+              <strong style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ item.produto__titulo }}
+              </strong>
+            </div>
+            <div style="text-align: right;">
+              <div><strong>{{ item.total_qtd }} un.</strong></div>
+              <div style="font-size: 11px; color: #10B981;">R$ {{ item.total_val }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 24px;">
+        Nenhuma venda registrada nos últimos 30 dias.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- CARD INSIGHTS RÁPIDOS -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Insights rápidos</h3>
+      <span class="badge badge-info">IA & Inteligência</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span style="color: var(--text-muted);">Melhor dia de vendas:</span>
+        <strong>Quinta-feira (+34% em conversões)</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span style="color: var(--text-muted);">Taxa de conversão do catálogo:</span>
+        <strong style="color: #10B981;">4,8% (Acima da média)</strong>
+      </div>
+
+      <!-- ALERTA DE ESTOQUE BAIXO -->
+      {% if produtos_baixo_estoque %}
+        <div style="background: #FEF2F2; border: 1px solid #FCA5A5; padding: 10px 14px; border-radius: var(--radius-md); font-size: 12px; color: #991B1B;">
+          ⚠️ <strong>Estoque baixo:</strong> {{ produtos_baixo_estoque.count }} anúncio(s) com menos de 5 unidades.
+        </div>
+      {% endif %}
+
+      <!-- CARD ESCURO DE META MENSAL -->
+      <div style="background: #142621; color: #FFFFFF; padding: 16px; border-radius: var(--radius-md); margin-top: 4px;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+          <span>Meta mensal de vendas</span>
+          <strong>R$ {{ vendas_mes }} / R$ 25.000,00</strong>
+        </div>
+        <div class="progress-bar-bg" style="height: 8px;">
+          <div class="progress-bar-fill" style="width: {{ progresso_meta }}%;"></div>
+        </div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 6px; text-align: right;">
+          {{ progresso_meta }}% da meta atingida
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABELA DE PEDIDOS RECENTES -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Pedidos recentes</h3>
+    <a href="{% url 'orders:seller_orders' %}" style="font-size: 13px; color: var(--accent-blue); text-decoration: underline;">Ver todos os pedidos &rarr;</a>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>PEDIDO</th>
+        <th>DATA</th>
+        <th>COMPRADOR</th>
+        <th>PRODUTO</th>
+        <th>VALOR TOTAL</th>
+        <th>STATUS</th>
+        <th>AÇÕES</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in pedidos_recentes %}
+        <tr>
+          <td><strong>{{ o.codigo }}</strong></td>
+          <td>{{ o.criado_em|date:"d/m/Y H:i" }}</td>
+          <td>{{ o.comprador.profile.nome|default:o.comprador.username }}</td>
+          <td>{{ o.produto.titulo|truncatechars:28 }}</td>
+          <td><strong>R$ {{ o.valor_total }}</strong></td>
+          <td>
+            <span class="badge badge-{{ o.status_display_badge.1 }}">
+              {{ o.status_display_badge.0 }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'orders:tracking' o.id %}" class="btn btn-outline btn-sm">Detalhes</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            Nenhum pedido recente.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.chartLabels = {{ meses_labels|safe }};
+  window.chartCurrentYear = {{ ano_atual_dados|safe }};
+  window.chartPrevYear = {{ ano_anterior_dados|safe }};
+</script>
+{% endblock %}

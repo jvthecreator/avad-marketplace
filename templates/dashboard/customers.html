@@ -1,0 +1,39 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Clientes — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700;">Base de Clientes</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Compradores que já fecharam pedidos com sua loja</p>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>CLIENTE</th>
+        <th>EMAIL</th>
+        <th>TOTAL DE PEDIDOS</th>
+        <th>VALOR TOTAL COMPRADO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in compradores %}
+        <tr>
+          <td><strong>{{ c.comprador__profile__nome|default:"Cliente" }}</strong></td>
+          <td>{{ c.comprador__email }}</td>
+          <td>{{ c.total_compras }} pedido(s)</td>
+          <td><strong style="color: #059669;">R$ {{ c.total_gasto }}</strong></td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 32px; color: var(--text-muted);">
+            Nenhum cliente registrado ainda.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

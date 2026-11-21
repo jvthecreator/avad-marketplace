@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Disputa {{ dispute.codigo }} — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  {% if request.user == dispute.vendedor %}
+    <a href="{% url 'disputes:seller_disputes' %}">Disputas do Vendedor</a>
+  {% else %}
+    <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a>
+  {% endif %}
+  &rsaquo; <span>Disputa {{ dispute.codigo }}</span>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700;">Disputa {{ dispute.codigo }}</h1>
+    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+      Pedido: <strong>{{ order.codigo }}</strong> &bull; Motivo: <em>{{ dispute.motivo }}</em>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span class="badge {% if dispute.status == 'em_analise' %}badge-warning{% elif dispute.status == 'decidida_comprador' %}badge-danger{% else %}badge-success{% endif %}" style="font-size: 13px; padding: 6px 12px;">
+      {{ dispute.get_status_display }}
+    </span>
+    <span class="badge badge-info" style="font-size: 13px; padding: 6px 12px;">
+      SLA Restante: {{ dispute.sla_restante }}
+    </span>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px;">
+  <!-- TIMELINE DE MENSAGENS E MANIFESTAÇÕES -->
+  <div>
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 class="card-title" style="margin-bottom: 16px;">Histórico de Mensagens e Manifestações</h3>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+        {% for msg in messages_list %}
+          <div style="padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: {% if msg.papel == 'mediador' %}#EFF6FF{% elif msg.papel == 'vendedor' %}#F0FDF4{% else %}#FFFFFF{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge {% if msg.papel == 'mediador' %}badge-primary{% elif msg.papel == 'vendedor' %}badge-success{% else %}badge-secondary{% endif %}" style="font-size: 10px;">
+                  {{ msg.get_papel_display }}
+                </span>
+                <strong style="font-size: 13px;">{{ msg.autor.profile.nome|default:msg.autor.username }}</strong>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">{{ msg.criado_em|date:"d/m/Y H:i" }}</span>
+            </div>
+            <p style="font-size: 13px; line-height: 1.5; color: var(--text-main); white-space: pre-line;">{{ msg.mensagem }}</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- FORMULÁRIO DE RESPOSTA -->
+      {% if dispute.status == 'em_analise' %}
+        <form method="post" enctype="multipart/form-data" style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label" for="{{ form.mensagem.id_for_label }}">Responder à mediação:</label>
+            {{ form.mensagem }}
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <label style="font-size: 12px; color: var(--text-muted); cursor: pointer;">
+                📎 Anexar documento/imagem: {{ form.evidencia }}
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar manifestação</button>
+          </div>
+        </form>
+      {% else %}
+        <div style="background: #F3F4F6; padding: 14px; border-radius: var(--radius-md); text-align: center; font-size: 13px; color: var(--text-muted);">
+          Esta disputa já foi encerrada com a decisão final do Mediador.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- COLUNA LATERAL: DETALHES DO PEDIDO E EVIDÊNCIAS -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- DADOS DO PEDIDO -->
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 12px;">Dados do Pedido</h3>
+      <div style="font-size: 13px; display: flex; flex-direction: column; gap: 6px;">
+        <div><strong>Item:</strong> {{ order.produto.titulo }}</div>
+        <div><strong>Valor Total:</strong> R$ {{ order.valor_total }}</div>
+        <div><strong>Vendedor:</strong> {{ order.vendedor.profile.nome_loja|default:order.vendedor.profile.nome }}</div>
+        <div><strong>Comprador:</strong> {{ order.comprador.profile.nome|default:order.comprador.username }}</div>
+        <div><strong>Status do Envio:</strong> {{ order.get_status_display }}</div>
+      </div>
+    </div>
+
+    <!-- BLOQUEIO FINANCEIRO -->
+    <div class="card" style="border-color: #F59E0B; background-color: #FFFDF5;">
+      <h3 class="card-title" style="color: #92400E; margin-bottom: 8px;">Custódia Retida</h3>
+      <p style="font-size: 12px; color: #78350F; line-height: 1.5;">
+        O split de R$ {{ order.valor_total }} está retido preventivamente na conta transitória de custódia até conclusão da análise.
+      </p>
+    </div>
+
+    <!-- EVIDÊNCIAS ANEXADAS -->
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 12px;">Evidências Anexadas ({{ evidences.count }})</h3>
+      {% if evidences %}
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+          {% for ev in evidences %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px; background: #F9FAFB; border-radius: var(--radius-sm);">
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">
+                📄 {{ ev.descricao|default:"Arquivo" }}
+              </span>
+              <a href="{{ ev.arquivo.url }}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 10px; padding: 2px 6px;">Baixar</a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="font-size: 12px; color: var(--text-muted);">Nenhuma evidência anexada.</div>
+      {% endif %}
+    </div>
+
+    <!-- DECISÃO FINAL CASO CONCLUÍDA -->
+    {% if dispute.fundamentacao_mediador %}
+      <div class="card" style="background: #F8FAFC; border-color: #CBD5E1;">
+        <h3 class="card-title" style="margin-bottom: 8px;">Parecer do Mediador</h3>
+        <p style="font-size: 13px; line-height: 1.5; color: var(--text-main);">
+          {{ dispute.fundamentacao_mediador }}
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

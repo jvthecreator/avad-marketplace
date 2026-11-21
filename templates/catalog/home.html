@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load avad_filters %}
+
+{% block title %}AVaD Marketplace — Assurance, Value and Dealing{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<div style="background: linear-gradient(135deg, #111111 0%, #1F2937 100%); color: #FFFFFF; border-radius: var(--radius-lg); padding: 48px 32px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap;">
+  <div style="max-width: 600px;">
+    <span class="badge badge-success" style="margin-bottom: 12px; background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981;">
+      SEGURANÇA &bull; split financeiro &bull; custódia (escrow)
+    </span>
+    <h1 style="font-size: 36px; font-weight: 800; line-height: 1.15; margin-bottom: 16px;">
+      O Marketplace Seguro com Garantia de Valor e Negociação
+    </h1>
+    <p style="font-size: 15px; color: #D1D5DB; margin-bottom: 24px; line-height: 1.6;">
+      No AVaD, seu dinheiro fica em conta transitória de custódia até você confirmar o recebimento do pacote em perfeito estado. Negocie com tranquilidade total.
+    </p>
+    <div style="display: flex; gap: 12px;">
+      <a href="{% url 'catalog:product_list' %}" class="btn btn-success btn-lg">Explorar Catálogo</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'dashboard:overview' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Painel do Vendedor</a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Cadastre-se Grátis</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(255, 255, 255, 0.05); padding: 24px; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1); min-width: 280px;">
+    <div style="font-size: 13px; font-weight: 600; color: #10B981;">COMO O AVAD TE PROTEGE:</div>
+    <div style="font-size: 13px; color: #E5E7EB; display: flex; gap: 8px;">
+      <span>🔒</span> <strong>Custódia em Escrow:</strong> O vendedor só recebe após o comprador validar.
+    </div>
+    <div style="font-size: 13px; color: #E5E7EB; display: flex; gap: 8px;">
+      <span>⚖️</span> <strong>Mediação com SLA de 48h:</strong> Suporte de vendas dedicado para conflitos.
+    </div>
+    <div style="font-size: 13px; color: #E5E7EB; display: flex; gap: 8px;">
+      <span>🚚</span> <strong>Rastreio Auditável:</strong> PAC, SEDEX e Transportadora AVAD Express.
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORIAS EM DESTAQUE -->
+<div style="margin-bottom: 32px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2 style="font-size: 20px; font-weight: 700;">Navegue por Categorias</h2>
+    <a href="{% url 'catalog:product_list' %}" style="font-size: 13px; color: var(--accent-blue); text-decoration: underline;">Ver todas</a>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+    {% for cat_val, cat_label in categorias|slice:":8" %}
+      <a href="{% url 'catalog:product_list' %}?categoria={{ cat_val }}" class="card" style="text-align: center; padding: 14px 8px; border-radius: var(--radius-md); transition: border-color 0.15s;">
+        <span style="font-size: 22px; display: block; margin-bottom: 4px;">🏷️</span>
+        <strong style="font-size: 13px;">{{ cat_label }}</strong>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- PRODUTOS EM DESTAQUE -->
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2 style="font-size: 20px; font-weight: 700;">Destaques Recentes</h2>
+    <a href="{% url 'catalog:product_list' %}" style="font-size: 13px; color: var(--accent-blue); text-decoration: underline;">Explorar tudo &rarr;</a>
+  </div>
+
+  <div class="product-grid">
+    {% for product in products %}
+      <div class="product-card">
+        <div class="product-img-wrap">
+          {% if product.frete_gratis %}
+            <span class="badge badge-success product-badge-float">FRETE GRÁTIS</span>
+          {% else %}
+            <span class="badge badge-info product-badge-float">NOVO</span>
+          {% endif %}
+
+          {% if product.imagem %}
+            <img src="{{ product.imagem.url }}" alt="{{ product.titulo }}" class="product-img">
+          {% else %}
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #F3F4F6; color: #9CA3AF; font-size: 13px;">Sem imagem</div>
+          {% endif %}
+        </div>
+
+        <div class="product-info">
+          <div class="product-seller">
+            Por <a href="{% url 'accounts:seller_profile' product.vendedor.id %}" style="text-decoration: underline;">{{ product.vendedor.profile.nome_loja|default:product.vendedor.profile.nome }}</a>
+          </div>
+          <h3 class="product-title">
+            <a href="{% url 'catalog:product_detail' product.id %}">{{ product.titulo }}</a>
+          </h3>
+
+          <div class="product-rating">
+            <span>★ {{ product.nota_media }}</span>
+            <span style="color: var(--text-muted);">({{ product.total_avaliacoes }})</span>
+          </div>
+
+          <div class="product-price">R$ {{ product.preco }}</div>
+          {% if product.parcelas_sem_juros %}
+            <div class="product-installments">{{ product.parcelas_sem_juros }}</div>
+          {% endif %}
+
+          <a href="{% url 'catalog:product_detail' product.id %}" class="btn btn-outline btn-block" style="margin-top: 8px;">
+            Ver anúncio
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <div style="grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--text-muted);">
+        Nenhum produto cadastrado ainda.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

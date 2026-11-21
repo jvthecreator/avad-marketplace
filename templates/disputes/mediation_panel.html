@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Mediação — Suporte de Vendas — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+  <div>
+    <h1 style="font-size: 26px; font-weight: 700;">Painel de Mediação de Conflitos</h1>
+    <p style="font-size: 14px; color: var(--text-muted);">Suporte de Vendas AVaD &bull; Auditoria de Custódia e SLA</p>
+  </div>
+
+  <div style="display: flex; gap: 8px;">
+    <a href="?" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline{% endif %}">Todas</a>
+    <a href="?status=em_analise" class="btn btn-sm {% if status_filter == 'em_analise' %}btn-primary{% else %}btn-outline{% endif %}">Em Análise</a>
+    <a href="?status=decidida_comprador" class="btn btn-sm {% if status_filter == 'decidida_comprador' %}btn-primary{% else %}btn-outline{% endif %}">Decidida Comprador</a>
+    <a href="?status=decidida_vendedor" class="btn btn-sm {% if status_filter == 'decidida_vendedor' %}btn-primary{% else %}btn-outline{% endif %}">Decidida Vendedor</a>
+  </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>CÓDIGO</th>
+        <th>PEDIDO</th>
+        <th>COMPRADOR</th>
+        <th>VENDEDOR</th>
+        <th>MOTIVO</th>
+        <th>SLA RESTANTE</th>
+        <th>STATUS</th>
+        <th>AÇÃO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in disputes %}
+        <tr>
+          <td><strong style="color: var(--accent-blue);">{{ d.codigo }}</strong></td>
+          <td>{{ d.pedido.codigo }}</td>
+          <td>{{ d.comprador.profile.nome|default:d.comprador.username }}</td>
+          <td>{{ d.vendedor.profile.nome_loja|default:d.vendedor.profile.nome }}</td>
+          <td>{{ d.motivo }}</td>
+          <td>
+            <span class="badge {% if d.status == 'em_analise' %}badge-warning{% else %}badge-secondary{% endif %}">
+              {{ d.sla_restante }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if d.status == 'em_analise' %}badge-warning{% elif d.status == 'decidida_comprador' %}badge-danger{% else %}badge-success{% endif %}">
+              {{ d.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'disputes:mediation_detail' d.id %}" class="btn btn-primary btn-sm">
+              Analisar Conflito &rarr;
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 48px; color: var(--text-muted);">
+            Nenhuma disputa encontrada no momento.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

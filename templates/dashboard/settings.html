@@ -1,0 +1,45 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Configurações da Loja — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700;">Configurações da Loja</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Dados cadastrais, status de split e conta bancária</p>
+</div>
+
+<div style="max-width: 600px;">
+  <div class="card">
+    <div class="form-group">
+      <label class="form-label">Nome da Loja:</label>
+      <input type="text" class="form-input" value="{{ profile.nome_loja|default:profile.nome }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email de Contato:</label>
+      <input type="email" class="form-input" value="{{ user.email }}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">CPF / CNPJ:</label>
+      <input type="text" class="form-input" value="{% if profile.tem_cnpj %}{{ profile.cnpj }}{% else %}{{ profile.cpf }}{% endif %}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Status da Conta Bancária / Escrow:</label>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        <span>
+          {% if profile.conta_bancaria_bloqueada %}
+            <strong style="color: #DC2626;">Bloqueada (Retenção em Escrow Ativa)</strong>
+          {% else %}
+            <strong style="color: #059669;">Regular / Apta para Repasse Automático</strong>
+          {% endif %}
+        </span>
+        {% if profile.conta_bancaria_bloqueada %}
+          <a href="{% url 'finance:regularize' %}" class="btn btn-sm btn-primary">Regularizar</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

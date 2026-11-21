@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Pedidos — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Meus Pedidos</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Acompanhe entregas, confirme recebimentos e solicite assistência</p>
+</div>
+
+<!-- ABAS, BUSCA E FILTROS -->
+<div class="card" style="margin-bottom: 24px; padding: 16px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <!-- ABAS -->
+    <div style="display: flex; gap: 8px;">
+      <a href="?aba=todos{% if q %}&q={{ q }}{% endif %}{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if aba == 'todos' %}btn-primary{% else %}btn-outline{% endif %}">
+        Todos
+      </a>
+      <a href="?aba=em_andamento{% if q %}&q={{ q }}{% endif %}{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if aba == 'em_andamento' %}btn-primary{% else %}btn-outline{% endif %}">
+        Em andamento
+      </a>
+      <a href="?aba=entregues{% if q %}&q={{ q }}{% endif %}{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if aba == 'entregues' %}btn-primary{% else %}btn-outline{% endif %}">
+        Entregues
+      </a>
+      <a href="?aba=cancelados{% if q %}&q={{ q }}{% endif %}{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if aba == 'cancelados' %}btn-primary{% else %}btn-outline{% endif %}">
+        Cancelados
+      </a>
+    </div>
+
+    <!-- BUSCA & PERÍODO -->
+    <form method="get" style="display: flex; gap: 10px; align-items: center;">
+      <input type="hidden" name="aba" value="{{ aba }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar por produto ou nº..." class="form-input" style="padding: 6px 12px; font-size: 13px; width: 220px;">
+      <select name="periodo" onchange="this.form.submit()" class="form-select" style="padding: 6px 12px; font-size: 13px;">
+        <option value="6m" {% if periodo == '6m' %}selected{% endif %}>Últimos 6 meses</option>
+        <option value="todos" {% if periodo == 'todos' %}selected{% endif %}>Todo o histórico</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Buscar</button>
+    </form>
+  </div>
+</div>
+
+<!-- LISTA DE PEDIDOS -->
+<div style="display: flex; flex-direction: column; gap: 20px;">
+  {% for order in orders %}
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <strong style="font-size: 15px;">{{ order.codigo }}</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Realizado em {{ order.criado_em|date:"d/m/Y \à\s H:i" }}</span>
+        </div>
+
+        <div>
+          <span class="badge badge-{{ order.status_display_badge.1 }}">
+            {{ order.status_display_badge.0 }}
+          </span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 80px 1fr 220px; gap: 20px; align-items: center;">
+        <!-- IMAGEM -->
+        <div style="width: 80px; height: 80px; background: #F3F4F6; border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+          {% if order.produto.imagem %}
+            <img src="{{ order.produto.imagem.url }}" alt="{{ order.produto.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+            <span style="font-size: 11px; color: #9CA3AF;">Sem foto</span>
+          {% endif %}
+        </div>
+
+        <!-- DETALHES DO PRODUTO -->
+        <div>
+          <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
+            <a href="{% url 'catalog:product_detail' order.produto.id %}">{{ order.produto.titulo }}</a>
+          </h3>
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">
+            Vendedor: <a href="{% url 'accounts:seller_profile' order.vendedor.id %}" style="text-decoration: underline;">{{ order.vendedor.profile.nome_loja|default:order.vendedor.profile.nome }}</a>
+            &bull; Quantidade: {{ order.quantidade }}
+          </div>
+          <div style="font-size: 14px; font-weight: 700;">
+            Total: R$ {{ order.valor_total }} (Frete: R$ {{ order.valor_frete }})
+          </div>
+          {% if order.codigo_rastreio %}
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              Rastreio: <code>{{ order.codigo_rastreio }}</code> ({{ order.get_metodo_frete_display }})
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- AÇÕES CONTEXTUAIS -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <a href="{% url 'orders:tracking' order.id %}" class="btn btn-primary btn-sm btn-block">
+            Acompanhar entrega
+          </a>
+
+          {% if order.status == 'entregue' and not order.recebimento_confirmado %}
+            <a href="{% url 'orders:confirm_receipt' order.id %}" class="btn btn-success btn-sm btn-block">
+              Confirmar recebimento
+            </a>
+          {% endif %}
+
+          {% if order.status == 'entregue' and not order.review %}
+            <a href="{% url 'orders:review' order.id %}" class="btn btn-outline btn-sm btn-block">
+              Avaliar vendedor
+            </a>
+          {% endif %}
+
+          {% if order.status in 'a_caminho,entregue' %}
+            <a href="{% url 'disputes:open_dispute' order.id %}" class="btn btn-outline btn-sm btn-block" style="color: #DC2626;">
+              Abrir disputa
+            </a>
+          {% endif %}
+
+          {% if order.status != 'cancelado' %}
+            <a href="{% url 'orders:refund' order.id %}" class="btn btn-outline btn-sm btn-block">
+              Pedir reembolso
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card" style="text-align: center; padding: 48px; color: var(--text-muted);">
+      <div style="font-size: 32px; margin-bottom: 12px;">📦</div>
+      <p style="font-size: 15px; margin-bottom: 16px;">Nenhum pedido encontrado nesta seção.</p>
+      <a href="{% url 'catalog:product_list' %}" class="btn btn-primary btn-sm">Explorar Catálogo</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

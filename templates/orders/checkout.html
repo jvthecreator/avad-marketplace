@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Finalizar Compra — AVaD{% endblock %}
+
+{% block content %}
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'catalog:product_detail' product.id %}">{{ product.titulo|truncatechars:30 }}</a> &rsaquo;
+  <strong>Finalizar Compra</strong>
+</div>
+
+<form method="post" action="{% url 'orders:checkout' product.id %}?qtd={{ qtd }}" id="checkout-form" novalidate>
+  {% csrf_token %}
+  {{ form.quantidade }}
+
+  <div style="display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start;">
+    <!-- COLUNA PRINCIPAL: ETAPAS DE CHECKOUT -->
+    <div>
+      <!-- SIMULADOR BANCÁRIO / GATEWAY (Discreto no topo) -->
+      <div class="sim-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px;">
+        <div>
+          <strong>🏦 [Simulador de Gateway Bancário & Split]</strong>
+          <div style="font-size: 12px; color: #78350F;">Selecione o cenário desejado para testar os fluxos alternativos:</div>
+        </div>
+        <div style="min-width: 200px;">
+          {{ form.simulacao_gateway }}
+        </div>
+      </div>
+
+      <!-- ETAPA 1: ENDEREÇO DE ENTREGA -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h2 class="card-title">1. Endereço de entrega</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 160px 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label class="form-label" for="{{ form.cep.id_for_label }}">CEP *</label>
+            {{ form.cep }}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.rua.id_for_label }}">Rua e Número *</label>
+            {{ form.rua }}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label class="form-label" for="{{ form.complemento.id_for_label }}">Complemento</label>
+            {{ form.complemento }}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.bairro.id_for_label }}">Bairro *</label>
+            {{ form.bairro }}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.estado.id_for_label }}">UF *</label>
+            {{ form.estado }}
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" for="{{ form.cidade.id_for_label }}">Cidade *</label>
+          {{ form.cidade }}
+        </div>
+      </div>
+
+      <!-- ETAPA 2: SELEÇÃO DE FRETE -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h2 class="card-title">2. Opções de envio</h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="radio" name="metodo_frete" value="pac" checked>
+              <div>
+                <strong>PAC (Correios)</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">Entrega em até 8 dias úteis</div>
+              </div>
+            </div>
+            <strong style="color: {% if product.frete_gratis %}#10B981{% else %}var(--text-main){% endif %};">
+              {% if product.frete_gratis %}Grátis{% else %}R$ 22,50{% endif %}
+            </strong>
+          </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="radio" name="metodo_frete" value="sedex">
+              <div>
+                <strong>SEDEX Expresso</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">Entrega em até 3 dias úteis</div>
+              </div>
+            </div>
+            <strong>R$ 45,90</strong>
+          </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="radio" name="metodo_frete" value="avad_express">
+              <div>
+                <strong>Transportadora AVAD Express</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">Entrega prioritária em até 2 dias úteis com seguro integral</div>
+              </div>
+            </div>
+            <strong>R$ 58,00</strong>
+          </label>
+        </div>
+      </div>
+
+      <!-- ETAPA 3: FORMA DE PAGAMENTO -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">3. Forma de pagamento</h2>
+        </div>
+
+        <div style="display: flex; gap: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            <input type="radio" name="forma_pagamento" value="cartao" checked> Cartão de crédito
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            <input type="radio" name="forma_pagamento" value="pix"> PIX (Aprovação imediata)
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            <input type="radio" name="forma_pagamento" value="boleto"> Boleto Bancário
+          </label>
+        </div>
+
+        <!-- SEÇÃO CARTÃO DE CRÉDITO -->
+        <div id="payment-section-cartao">
+          {% if saved_cards %}
+            <div style="margin-bottom: 16px; background: #F9FAFB; padding: 12px; border-radius: var(--radius-md);">
+              <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 8px;">Seus cartões salvos:</label>
+              {% for card in saved_cards %}
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px;">
+                  <input type="radio" name="cartao_selecionado" value="{{ card.id }}">
+                  <span>💳 {{ card.bandeira }} terminado em <strong>{{ card.ultimos_digitos }}</strong> ({{ card.nome_impresso }})</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <label class="form-label" for="{{ form.numero_cartao.id_for_label }}">Número do cartão *</label>
+              {{ form.numero_cartao }}
+            </div>
+            <div>
+              <label class="form-label" for="{{ form.nome_cartao.id_for_label }}">Nome impresso no cartão *</label>
+              {{ form.nome_cartao }}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 120px 100px 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <label class="form-label" for="{{ form.validade_cartao.id_for_label }}">Validade *</label>
+              {{ form.validade_cartao }}
+            </div>
+            <div>
+              <label class="form-label" for="{{ form.cvv.id_for_label }}">CVV *</label>
+              {{ form.cvv }}
+            </div>
+            <div>
+              <label class="form-label" for="{{ form.cpf_titular.id_for_label }}">CPF do titular *</label>
+              {{ form.cpf_titular }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.parcelas.id_for_label }}">Parcelamento *</label>
+            {{ form.parcelas }}
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+            <label class="form-check">
+              {{ form.salvar_cartao }}
+              <span>Salvar cartão para próximas compras</span>
+            </label>
+            <label class="form-check">
+              {{ form.endereco_cobranca_igual }}
+              <span>Endereço de cobrança igual ao de entrega</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SEÇÃO PIX -->
+        <div id="payment-section-pix" style="display: none; text-align: center; padding: 24px;">
+          <div style="font-size: 40px; margin-bottom: 12px;">📱</div>
+          <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Pagamento instantâneo via PIX</h4>
+          <p style="font-size: 13px; color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+            O código QR Code dinâmico com custódia segura será gerado após clicar em confirmar.
+          </p>
+        </div>
+
+        <!-- SEÇÃO BOLETO -->
+        <div id="payment-section-boleto" style="display: none; text-align: center; padding: 24px;">
+          <div style="font-size: 40px; margin-bottom: 12px;">📄</div>
+          <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Boleto Bancário</h4>
+          <p style="font-size: 13px; color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+            Vencimento em 3 dias úteis. Compensação em até 48 horas úteis.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA DIREITA: RESUMO DO PEDIDO -->
+    <div>
+      <div class="card" style="position: sticky; top: 80px;">
+        <h2 class="card-title" style="margin-bottom: 16px;">Resumo do pedido</h2>
+
+        <!-- ITEM -->
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+          <div style="width: 56px; height: 56px; background: #F3F4F6; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;">
+            {% if product.imagem %}
+              <img src="{{ product.imagem.url }}" alt="{{ product.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 13px; font-weight: 600; line-height: 1.3;">{{ product.titulo }}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Qtd: <strong>{{ qtd }}</strong>x R$ {{ product.preco }}</div>
+          </div>
+        </div>
+
+        <!-- TOTAIS -->
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Subtotal:</span>
+            <span>R$ {% widthratio product.preco 1 qtd as subtotal %}{{ subtotal|default:product.preco }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Frete estimado:</span>
+            <span id="resumo-frete">{% if product.frete_gratis %}Grátis{% else %}R$ 22,50{% endif %}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; color: #10B981;">
+            <span>Cupom aplicado:</span>
+            <span>- R$ 0,00</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: baseline;">
+          <span style="font-size: 16px; font-weight: 700;">Total:</span>
+          <span style="font-size: 24px; font-weight: 800; color: var(--text-main);" id="resumo-total">
+            R$ {{ product.preco }}
+          </span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">
+          Confirmar e pagar
+        </button>
+
+        <div style="text-align: center; margin-top: 16px; font-size: 11px; color: var(--text-muted);">
+          🔒 Ambiente protegido com criptografia de 256 bits e split com custódia garantida.
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

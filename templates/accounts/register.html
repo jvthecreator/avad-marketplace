@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Usuário — AVaD{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 6px;">Criar Conta no AVaD</h1>
+    <p style="font-size: 13px; color: var(--text-muted);">Compre e venda com total garantia e custódia segura</p>
+  </div>
+
+  {% if show_verification %}
+    <div class="sim-banner">
+      <div style="font-weight: 700; margin-bottom: 6px;">📧 [Simulador de E-mail de Verificação]</div>
+      <p style="margin-bottom: 8px;">Um link de ativação foi simulado para <strong>{{ email }}</strong>:</p>
+      <a href="{{ verify_url }}" class="btn btn-primary btn-sm">Confirmar Email Agora</a>
+    </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'accounts:register' %}" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="form-label {% if 'nome' in missing_fields %}missing{% endif %}" for="{{ form.nome.id_for_label }}">
+        Nome *
+      </label>
+      {{ form.nome }}
+      {% if form.nome.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.nome.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label {% if 'data_nascimento' in missing_fields %}missing{% endif %}" for="{{ form.data_nascimento.id_for_label }}">
+        Data de nascimento *
+      </label>
+      {{ form.data_nascimento }}
+      {% if form.data_nascimento.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.data_nascimento.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label {% if 'email' in missing_fields %}missing{% endif %}" for="{{ form.email.id_for_label }}">
+        Email *
+      </label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label {% if 'senha' in missing_fields %}missing{% endif %}" for="{{ form.senha.id_for_label }}">
+        Senha *
+      </label>
+      {{ form.senha }}
+      {% if form.senha.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.senha.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label {% if 'cpf' in missing_fields %}missing{% endif %}" for="{{ form.cpf.id_for_label }}">
+        CPF *
+      </label>
+      {{ form.cpf }}
+      {% if form.cpf.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.cpf.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="{{ form.cnpj.id_for_label }}">
+        CNPJ (opcional)
+      </label>
+      {{ form.cnpj }}
+      {% if form.cnpj.errors %}
+        <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.cnpj.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 24px;">
+      <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar</button>
+      <a href="{% url 'home' %}" class="btn btn-outline">Cancelar</a>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 13px;">
+      Já possui uma conta? <a href="{% url 'accounts:login' %}" style="font-weight: 600; text-decoration: underline;">Realizar login</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: avad-marketplace
+    env: python
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py seed_data"
+    startCommand: "gunicorn avad_marketplace.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: DEBUG
+        value: "True"

@@ -1,0 +1,78 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Produtos e Serviços — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700;">Produtos e Serviços Cadastrados</h1>
+    <p style="font-size: 13px; color: var(--text-muted);">Gerencie seus anúncios ativos, estoques e precificação</p>
+  </div>
+  <a href="{% url 'catalog:product_create' %}" class="btn btn-success">+ Novo Anúncio</a>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>PRODUTO / SERVIÇO</th>
+        <th>CATEGORIA</th>
+        <th>PREÇO</th>
+        <th>ESTOQUE</th>
+        <th>FRETE GRÁTIS</th>
+        <th>STATUS</th>
+        <th>AÇÕES</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 40px; height: 40px; background: #F3F4F6; border-radius: 4px; overflow: hidden; flex-shrink: 0;">
+                {% if p.imagem %}
+                  <img src="{{ p.imagem.url }}" alt="{{ p.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% endif %}
+              </div>
+              <div>
+                <strong>{{ p.titulo }}</strong>
+                <div style="font-size: 11px; color: var(--text-muted);">Criado em {{ p.criado_em|date:"d/m/Y" }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.get_categoria_display }}</td>
+          <td><strong>R$ {{ p.preco }}</strong></td>
+          <td>
+            <span style="{% if p.estoque <= 5 %}color: #DC2626; font-weight: 700;{% endif %}">
+              {{ p.estoque }} un.
+            </span>
+          </td>
+          <td>
+            {% if p.frete_gratis %}
+              <span class="badge badge-success">Sim</span>
+            {% else %}
+              <span class="badge badge-secondary">Não</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.ativo %}
+              <span class="badge badge-success">Ativo</span>
+            {% else %}
+              <span class="badge badge-secondary">Inativo</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'catalog:product_detail' p.id %}" target="_blank" class="btn btn-outline btn-sm">Ver na loja</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+            Nenhum produto cadastrado ainda. Clique em "+ Novo Anúncio" para começar.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

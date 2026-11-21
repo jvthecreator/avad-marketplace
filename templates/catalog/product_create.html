@@ -1,0 +1,108 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Novo Anúncio — AVaD{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="font-size: 24px; font-weight: 700;">Novo Anúncio</h1>
+      <p style="font-size: 13px; color: var(--text-muted);">Cadastre seu produto ou serviço com garantia de split e custódia</p>
+    </div>
+    <a href="{% url 'dashboard:products' %}" class="btn btn-outline btn-sm">Voltar</a>
+  </div>
+
+  <div class="card">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.titulo.id_for_label }}">Título do Anúncio *</label>
+        {{ form.titulo }}
+        {% if form.titulo.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.titulo.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.categoria.id_for_label }}">Categoria *</label>
+          {{ form.categoria }}
+          {% if form.categoria.errors %}
+            <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.categoria.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.preco.id_for_label }}">Preço (R$) *</label>
+          {{ form.preco }}
+          {% if form.preco.errors %}
+            <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.preco.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.estoque.id_for_label }}">Quantidade em Estoque *</label>
+          {{ form.estoque }}
+          {% if form.estoque.errors %}
+            <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.estoque.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.imagem.id_for_label }}">Imagem (JPG/PNG até 5 MB)</label>
+          {{ form.imagem }}
+          {% if form.imagem.errors %}
+            <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.imagem.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.descricao.id_for_label }}">Descrição do Anúncio *</label>
+        {{ form.descricao }}
+        {% if form.descricao.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.descricao.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.caracteristicas.id_for_label }}">Características (uma por linha)</label>
+        {{ form.caracteristicas }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-check">
+          {{ form.frete_gratis }}
+          <span>Oferecer <strong>Frete Grátis</strong> para este item</span>
+        </label>
+      </div>
+
+      <div class="form-group" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+        <label class="form-check">
+          {{ form.aceito_termos }}
+          <span>Eu aceito os termos (Leia nossos <a href="#" style="text-decoration: underline; font-weight: 600;">T&Cs</a>) *</span>
+        </label>
+        {% if form.aceito_termos.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">Você deve aceitar os termos de serviço para publicar.</div>
+        {% endif %}
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-success btn-lg" style="flex: 1;">Salvar e publicar</button>
+        <a href="{% url 'dashboard:overview' %}" class="btn btn-outline btn-lg">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

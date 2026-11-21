@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Área do Vendedor — AVaD{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div class="seller-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="seller-sidebar">
+      <div class="seller-sidebar-header">
+        <div class="seller-sidebar-logo">AVaD</div>
+        <div class="seller-sidebar-sub">Área do Vendedor</div>
+      </div>
+
+      <nav class="seller-nav">
+        <a href="{% url 'dashboard:overview' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'overview' %}active{% endif %}">
+          <span>📊</span> Visão geral
+        </a>
+        <a href="{% url 'orders:seller_orders' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'seller_orders' %}active{% endif %}">
+          <span>📦</span> Pedidos
+        </a>
+        <a href="{% url 'dashboard:products' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'products' %}active{% endif %}">
+          <span>🏷️</span> Produtos e serviços
+        </a>
+        <a href="{% url 'dashboard:reviews' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}">
+          <span>⭐</span> Avaliações
+        </a>
+        <a href="{% url 'finance:finance' %}" class="seller-nav-item {% if request.resolver_match.app_name == 'finance' %}active{% endif %}">
+          <span>💰</span> Financeiro & Split
+        </a>
+        <a href="{% url 'disputes:seller_disputes' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'seller_disputes' %}active{% endif %}">
+          <span>⚖️</span> Disputas & Mediação
+        </a>
+        <a href="{% url 'dashboard:customers' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+          <span>👥</span> Clientes
+        </a>
+        <a href="{% url 'dashboard:settings' %}" class="seller-nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+          <span>⚙️</span> Configurações
+        </a>
+      </nav>
+
+      <!-- PROFILE COMPLETENESS -->
+      <div class="seller-sidebar-profile">
+        <div class="profile-progress-label">
+          <span>Perfil da loja</span>
+          <span>85%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: 85%;"></div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--sidebar-muted);">
+          {{ user.profile.nome_loja|default:user.profile.nome }}
+          {% if user.profile.tem_cnpj %}
+            <span class="badge badge-success" style="font-size: 9px; padding: 1px 4px;">CNPJ</span>
+          {% endif %}
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <div class="seller-content">
+      <!-- TOPBAR -->
+      <header class="seller-topbar">
+        <div style="font-size: 14px; font-weight: 600; color: var(--text-muted);">
+          Painel de Vendas AVaD &bull; Split Automático & Escrow Integrados
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <a href="{% url 'home' %}" class="btn btn-outline btn-sm">Ir para a Loja</a>
+          <a href="{% url 'catalog:product_create' %}" class="btn btn-success btn-sm">+ Nova oferta</a>
+          <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm">Sair</a>
+        </div>
+      </header>
+
+      <!-- MESSAGES -->
+      {% if messages %}
+        <div style="padding: 16px 32px 0;">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="seller-main-body">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

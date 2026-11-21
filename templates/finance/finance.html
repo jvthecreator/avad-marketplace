@@ -1,0 +1,183 @@
+{% extends "dashboard/base_seller.html" %}
+
+{% block title %}Financeiro & Split — Área do Vendedor — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700;">Gestão Financeira & Split Automático</h1>
+    <p style="font-size: 13px; color: var(--text-muted);">Divisão em tempo real entre Loja, Logística e Marketplace com custódia garantida</p>
+  </div>
+
+  <div>
+    <a href="{% url 'finance:export_csv' %}" class="btn btn-outline">
+      📥 Exportar extrato (CSV)
+    </a>
+  </div>
+</div>
+
+<!-- 3 CARDS SUPERIORES DE KPIS -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-title">Repasses realizados</div>
+    <div class="kpi-val" style="color: #059669;">R$ {{ realizados }}</div>
+    <div class="kpi-badge positive">✓ Transferido para conta</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Programados (a receber)</div>
+    <div class="kpi-val" style="color: #2563EB;">R$ {{ programados }}</div>
+    <div class="kpi-badge" style="color: #2563EB;">Aguardando entrega do pedido</div>
+  </div>
+
+  <div class="kpi-card" style="{% if retidos > 0 %}border-color: #F59E0B; background-color: #FFFDF5;{% endif %}">
+    <div class="kpi-title">Retido em conta transitória (escrow)</div>
+    <div class="kpi-val" style="color: {% if retidos > 0 %}#D97706{% else %}var(--text-muted){% endif %};">
+      R$ {{ retidos }}
+    </div>
+    <div class="kpi-badge" style="color: #D97706;">🔒 Protegido em custódia</div>
+  </div>
+</div>
+
+<!-- BANNER DE ALERTA DE CONTA BLOQUEADA / ESCROW -->
+{% if conta_bloqueada or retidos > 0 %}
+  <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: var(--radius-lg); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="font-size: 28px;">⚠️</span>
+      <div>
+        <strong style="color: #92400E; font-size: 15px;">Atenção: Existem repasses retidos em Conta Transitória (Escrow)</strong>
+        <p style="font-size: 13px; color: #78350F; margin-top: 2px;">
+          Sua conta bancária ou dados cadastrais necessitam de regularização para liberação automática das transferências.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <a href="{% url 'finance:regularize' %}" class="btn btn-primary" style="background: #D97706; border-color: #B45309;">
+        Regularizar conta
+      </a>
+    </div>
+  </div>
+{% endif %}
+
+<!-- GRID: TABELA DE LANÇAMENTOS E DETALHE DO LANÇAMENTO -->
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;">
+  <!-- TABELA DE LANÇAMENTOS -->
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+      <h3 class="card-title" style="margin-bottom: 0;">Lançamentos de Split</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">Comissão AVaD: 6,5%</span>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>PEDIDO</th>
+          <th>DATA</th>
+          <th>TOTAL PAGO</th>
+          <th>COMISSÃO AVAD</th>
+          <th>FRETE</th>
+          <th>LÍQUIDO</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in splits %}
+          <tr style="cursor: pointer; {% if selected_split and selected_split.id == s.id %}background-color: #F0FDF4; font-weight: 500;{% endif %}" onclick="window.location.href='?split_id={{ s.id }}'">
+            <td>
+              <strong>{{ s.pedido.codigo }}</strong>
+            </td>
+            <td>{{ s.data_lancamento|date:"d/m/Y H:i" }}</td>
+            <td>R$ {{ s.total_pago }}</td>
+            <td style="color: var(--text-muted);">- R$ {{ s.comissao_marketplace }}</td>
+            <td style="color: var(--text-muted);">- R$ {{ s.valor_frete_logistica }}</td>
+            <td style="font-weight: 700; color: #10B981;">R$ {{ s.valor_liquido_vendedor }}</td>
+            <td>
+              {% if s.status_repasse == 'realizado' %}
+                <span class="badge badge-success">Repasse realizado</span>
+              {% elif s.status_repasse == 'programado' %}
+                <span class="badge badge-info">Programado</span>
+              {% elif s.status_repasse == 'retido' %}
+                <span class="badge badge-warning">Retido</span>
+              {% elif s.status_repasse == 'estornado' %}
+                <span class="badge badge-danger">Estornado</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+              Nenhum lançamento financeiro registrado.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAINEL LATERAL: DETALHE DO LANÇAMENTO -->
+  <div>
+    <div class="card" style="position: sticky; top: 80px;">
+      <h3 class="card-title" style="margin-bottom: 16px;">DETALHE DO LANÇAMENTO</h3>
+
+      {% if selected_split %}
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Pedido <strong>{{ selected_split.pedido.codigo }}</strong> &bull; {{ selected_split.data_lancamento|date:"d/m/Y" }}
+        </div>
+
+        <div style="font-size: 28px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
+          R$ {{ selected_split.total_pago }}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+          Total transacionado pelo comprador
+        </div>
+
+        <!-- BARRA PROPORCIONAL VISUAL -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+            Divisão Proporcional do Split:
+          </div>
+          <div class="split-bar-wrap">
+            <div class="split-seg-seller" style="width: {{ selected_split.percentual_vendedor }}%;" title="Vendedor: {{ selected_split.percentual_vendedor }}%"></div>
+            <div class="split-seg-logistics" style="width: {{ selected_split.percentual_frete }}%;" title="Logística: {{ selected_split.percentual_frete }}%"></div>
+            <div class="split-seg-avad" style="width: {{ selected_split.percentual_comissao }}%;" title="AVaD: {{ selected_split.percentual_comissao }}%"></div>
+          </div>
+        </div>
+
+        <!-- BREAKDOWN NUMÉRICO -->
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #10B981;"></div>
+              <span>Líquido Vendedor ({{ selected_split.percentual_vendedor }}%):</span>
+            </div>
+            <strong>R$ {{ selected_split.valor_liquido_vendedor }}</strong>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #3B82F6;"></div>
+              <span>Parceiro Logístico ({{ selected_split.percentual_frete }}%):</span>
+            </div>
+            <span>R$ {{ selected_split.valor_frete_logistica }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #111111;"></div>
+              <span>Comissão AVaD ({{ selected_split.percentual_comissao }}%):</span>
+            </div>
+            <span>R$ {{ selected_split.comissao_marketplace }}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted);">
+          Status do repasse: <strong>{{ selected_split.get_status_repasse_display }}</strong>
+        </div>
+      {% else %}
+        <div style="color: var(--text-muted); font-size: 13px;">Selecione um lançamento para visualizar os detalhes do split.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

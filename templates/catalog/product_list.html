@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load avad_filters %}
+
+{% block title %}Catálogo de Produtos e Serviços — AVaD{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMBS -->
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'catalog:product_list' %}">Catálogo</a>
+  {% if cat %} &rsaquo; <strong>{{ cat|title }}</strong>{% endif %}
+  {% if q %} &rsaquo; Resultados para "<em>{{ q }}</em>"{% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: 240px 1fr; gap: 24px;">
+  <!-- BARRA LATERAL DE FILTROS -->
+  <aside>
+    <div class="card">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        Filtros
+      </h3>
+
+      <form method="get" action="{% url 'catalog:product_list' %}">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+
+        <!-- CATEGORIAS -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Categorias</label>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="?{% if q %}q={{ q }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}" style="{% if not cat %}font-weight: 700; color: var(--primary);{% else %}color: var(--text-muted);{% endif %}">
+              Todas as categorias
+            </a>
+            {% for cat_val, cat_label in categorias %}
+              <a href="?categoria={{ cat_val }}{% if q %}&q={{ q }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" style="{% if cat == cat_val %}font-weight: 700; color: var(--primary);{% else %}color: var(--text-muted);{% endif %}">
+                {{ cat_label }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- PREÇO MIN / MAX -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Faixa de Preço (R$)</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="number" name="preco_min" value="{{ preco_min }}" placeholder="Mín" class="form-input" style="padding: 6px 8px; font-size: 12px;">
+            <input type="number" name="preco_max" value="{{ preco_max }}" placeholder="Máx" class="form-input" style="padding: 6px 8px; font-size: 12px;">
+          </div>
+          {% if cat %}<input type="hidden" name="categoria" value="{{ cat }}">{% endif %}
+          <button type="submit" class="btn btn-secondary btn-sm btn-block">Aplicar Preço</button>
+        </div>
+
+        {% if cat or preco_min or preco_max or q %}
+          <a href="{% url 'catalog:product_list' %}" class="btn btn-outline btn-sm btn-block">Limpar filtros</a>
+        {% endif %}
+      </form>
+    </div>
+  </aside>
+
+  <!-- RESULTADOS & GRID -->
+  <div>
+    <!-- ORDENAÇÃO E RESUMO -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div style="font-size: 14px; color: var(--text-muted);">
+        Mostrando <strong>{{ products.paginator.count }}</strong> resultados
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+        <label for="sort-select">Ordenar por:</label>
+        <form method="get" id="sort-form">
+          {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+          {% if cat %}<input type="hidden" name="categoria" value="{{ cat }}">{% endif %}
+          {% if preco_min %}<input type="hidden" name="preco_min" value="{{ preco_min }}">{% endif %}
+          {% if preco_max %}<input type="hidden" name="preco_max" value="{{ preco_max }}">{% endif %}
+
+          <select name="sort" id="sort-select" onchange="this.form.submit()" class="form-select" style="padding: 6px 12px; font-size: 13px;">
+            <option value="relevancia" {% if sort == 'relevancia' %}selected{% endif %}>Relevância</option>
+            <option value="menor_preco" {% if sort == 'menor_preco' %}selected{% endif %}>Menor preço</option>
+            <option value="maior_preco" {% if sort == 'maior_preco' %}selected{% endif %}>Maior preço</option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="product-grid">
+      {% for product in products %}
+        <div class="product-card">
+          <div class="product-img-wrap">
+            {% if product.frete_gratis %}
+              <span class="badge badge-success product-badge-float">FRETE GRÁTIS</span>
+            {% else %}
+              <span class="badge badge-info product-badge-float">NOVO</span>
+            {% endif %}
+
+            {% if product.imagem %}
+              <img src="{{ product.imagem.url }}" alt="{{ product.titulo }}" class="product-img">
+            {% else %}
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #F3F4F6; color: #9CA3AF; font-size: 13px;">Sem imagem</div>
+            {% endif %}
+          </div>
+
+          <div class="product-info">
+            <div class="product-seller">
+              Por <a href="{% url 'accounts:seller_profile' product.vendedor.id %}" style="text-decoration: underline;">{{ product.vendedor.profile.nome_loja|default:product.vendedor.profile.nome }}</a>
+            </div>
+            <h3 class="product-title">
+              <a href="{% url 'catalog:product_detail' product.id %}">{{ product.titulo }}</a>
+            </h3>
+
+            <div class="product-rating">
+              <span>★ {{ product.nota_media }}</span>
+              <span style="color: var(--text-muted);">({{ product.total_avaliacoes }})</span>
+            </div>
+
+            <div class="product-price">R$ {{ product.preco }}</div>
+            {% if product.parcelas_sem_juros %}
+              <div class="product-installments">{{ product.parcelas_sem_juros }}</div>
+            {% endif %}
+
+            <a href="{% url 'catalog:product_detail' product.id %}" class="btn btn-outline btn-block" style="margin-top: 8px;">
+              Ver anúncio
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <div style="grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--text-muted);">
+          Nenhum anúncio encontrado para estes critérios.
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- PAGINAÇÃO -->
+    {% if products.has_other_pages %}
+      <div style="display: flex; justify-content: center; gap: 8px; margin-top: 32px;">
+        {% if products.has_previous %}
+          <a href="?page={{ products.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if cat %}&categoria={{ cat }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="btn btn-outline btn-sm">&larr; Anterior</a>
+        {% endif %}
+
+        {% for num in products.paginator.page_range %}
+          <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if cat %}&categoria={{ cat }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="btn btn-sm {% if products.number == num %}btn-primary{% else %}btn-outline{% endif %}">
+            {{ num }}
+          </a>
+        {% endfor %}
+
+        {% if products.has_next %}
+          <a href="?page={{ products.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if cat %}&categoria={{ cat }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="btn btn-outline btn-sm">Próxima &rarr;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load avad_filters %}
+
+{% block title %}{{ product.titulo }} — AVaD{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMBS -->
+<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+  <a href="{% url 'home' %}">Início</a> &rsaquo;
+  <a href="{% url 'catalog:product_list' %}">Catálogo</a> &rsaquo;
+  <a href="{% url 'catalog:product_list' %}?categoria={{ product.categoria }}">{{ product.get_categoria_display }}</a> &rsaquo;
+  <span>{{ product.titulo|truncatechars:40 }}</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 420px; gap: 32px; align-items: start;">
+  <!-- COLUNA ESQUERDA: GALERIA E DESCRIÇÃO -->
+  <div>
+    <!-- IMAGEM PRINCIPAL -->
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+      <div style="position: relative; width: 100%; height: 420px; background-color: #F3F4F6; display: flex; align-items: center; justify-content: center;">
+        {% if product.imagem %}
+          <img src="{{ product.imagem.url }}" alt="{{ product.titulo }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        {% else %}
+          <div style="font-size: 16px; color: var(--text-muted);">Sem imagem cadastrada</div>
+        {% endif %}
+
+        {% if product.frete_gratis %}
+          <span class="badge badge-success" style="position: absolute; top: 16px; left: 16px; font-size: 12px; padding: 4px 10px;">FRETE GRÁTIS</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- CARACTERÍSTICAS -->
+    {% if caracteristicas_list %}
+      <div class="card" style="margin-bottom: 24px;">
+        <h3 class="card-title">Características do produto</h3>
+        <ul style="padding-left: 20px; font-size: 14px; color: var(--text-main); display: flex; flex-direction: column; gap: 8px;">
+          {% for c in caracteristicas_list %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- DESCRIÇÃO COMPLETA -->
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 class="card-title">Descrição detalhada</h3>
+      <div style="font-size: 14px; line-height: 1.7; color: #374151; white-space: pre-line;">
+        {{ product.descricao }}
+      </div>
+    </div>
+
+    <!-- AVALIAÇÕES DO PRODUTO -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Opiniões sobre o produto ({{ total_reviews }})</h3>
+        <div style="font-size: 18px; font-weight: 700; color: #F59E0B;">
+          ★ {{ avg_note }} / 5.0
+        </div>
+      </div>
+
+      {% if reviews %}
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          {% for r in reviews %}
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-size: 13px; font-weight: 600;">{{ r.comprador.profile.nome|default:r.comprador.username }}</span>
+                <span style="font-size: 12px; color: var(--text-muted);">{{ r.criado_em|date:"d/m/Y" }}</span>
+              </div>
+              <div style="color: #F59E0B; font-size: 13px; margin-bottom: 4px;">
+                {% for i in r.nota_vendedor|stars_range %}★{% endfor %}
+              </div>
+              {% if r.comentario_vendedor %}
+                <p style="font-size: 13px; color: var(--text-main);">{{ r.comentario_vendedor }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="font-size: 13px; color: var(--text-muted);">Ainda não há avaliações para este anúncio. Seja o primeiro a comprar!</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- COLUNA DIREITA: COMPRA, VENDEDOR E FRETE -->
+  <div>
+    <div class="card" style="position: sticky; top: 80px;">
+      <!-- VENDEDOR BADGE & PRO011 LINK -->
+      <div style="margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Vendido e entregue por:</div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <a href="{% url 'accounts:seller_profile' product.vendedor.id %}" style="font-weight: 700; font-size: 15px; color: var(--primary); text-decoration: underline;">
+            {{ seller_profile.nome_loja|default:seller_profile.nome|default:product.vendedor.username }}
+          </a>
+          {% if seller_profile.tem_cnpj %}
+            <span class="badge badge-success" style="font-size: 9px;">OFICIAL</span>
+          {% endif %}
+        </div>
+        <div style="font-size: 12px; color: #10B981; margin-top: 4px; font-weight: 600;">
+          ✓ {{ seller_profile.avaliacao_percentual }}% de avaliações positivas
+        </div>
+      </div>
+
+      <!-- TÍTULO & NOTA -->
+      <h1 style="font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px;">
+        {{ product.titulo }}
+      </h1>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 16px;">
+        <span style="color: #F59E0B; font-weight: 700;">★ {{ avg_note }}</span>
+        <span style="color: var(--text-muted);">({{ total_reviews }} avaliações)</span>
+        <span style="color: var(--text-muted);">&bull; Estoque: <strong>{{ product.estoque }}</strong> unid.</span>
+      </div>
+
+      <!-- PREÇO -->
+      <div style="margin-bottom: 20px;">
+        <div style="font-size: 32px; font-weight: 800; color: var(--text-main); line-height: 1;">
+          R$ {{ product.preco }}
+        </div>
+        {% if product.parcelas_sem_juros %}
+          <div style="font-size: 13px; color: #10B981; font-weight: 600; margin-top: 4px;">
+            {{ product.parcelas_sem_juros }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- CALCULADORA DE FRETE -->
+      <div style="background: #F9FAFB; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+        <label for="input-cep-calc" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">
+          Calcular frete e prazo de entrega:
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="input-cep-calc" data-product-id="{{ product.id }}" placeholder="00000-000" maxlength="9" class="form-input" style="padding: 6px 10px; font-size: 13px;">
+          <button type="button" id="btn-calc-frete" class="btn btn-secondary btn-sm">Calcular frete</button>
+        </div>
+        <div id="frete-results"></div>
+      </div>
+
+      <!-- SELETOR DE QUANTIDADE -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <span style="font-size: 13px; font-weight: 600;">Quantidade:</span>
+        <div style="display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+          <button type="button" id="qty-minus" style="padding: 6px 12px; background: #F3F4F6; border: none; cursor: pointer; font-weight: bold;">-</button>
+          <input type="number" id="qty-input" value="1" min="1" max="{{ product.estoque }}" style="width: 44px; text-align: center; border: none; outline: none; font-weight: 600;">
+          <button type="button" id="qty-plus" style="padding: 6px 12px; background: #F3F4F6; border: none; cursor: pointer; font-weight: bold;">+</button>
+        </div>
+      </div>
+
+      <!-- BOTÕES DE COMPRA -->
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% if product.estoque > 0 %}
+          <a href="{% url 'orders:checkout' product.id %}?qtd=1" id="btn-buy-now" data-base-href="{% url 'orders:checkout' product.id %}" class="btn btn-primary btn-lg btn-block">
+            Comprar Agora
+          </a>
+          <button type="button" class="btn btn-outline btn-block" onclick="alert('Item adicionado à sacola!')">
+            Adicionar ao carrinho
+          </button>
+        {% else %}
+          <button class="btn btn-secondary btn-lg btn-block" disabled>Produto Esgotado</button>
+        {% endif %}
+      </div>
+
+      <!-- SELO DE PROTEÇÃO AVAD -->
+      <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px; font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+        <div>🔒 <strong>Compra Garantida AVaD:</strong> Seu dinheiro protegido em custódia.</div>
+        <div>🔄 <strong>Reembolso Descomplicado:</strong> Devolução com protocolo auditável.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
