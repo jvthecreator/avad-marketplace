@@ -63,6 +63,12 @@ DATABASES = {
     }
 }
 
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://warren-wto-wars-east.trycloudflare.com',
+    'https://*.trycloudflare.com',  # Útil se a URL mudar a cada reinício do túnel
+]
+
 AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = 'pt-br'
