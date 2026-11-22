@@ -7,6 +7,7 @@ from .forms import DisputeForm, DisputeMessageForm, MediatorDecisionForm
 from orders.models import Order, TrackingEvent
 from finance.models import PaymentSplit
 from accounts.roles import e_parte_do_pedido, pagina_inicial, tipo_usuario
+from notifications.services import notificar_disputa_aberta, notificar_mensagem_disputa, notificar_decisao_disputa
 import random
 
 
@@ -70,6 +71,7 @@ def open_dispute_view(request, order_id):
                 local='Câmara de Mediação AVaD'
             )
 
+            notificar_disputa_aberta(dispute)
             messages.success(request, f'Disputa {dispute.codigo} aberta com sucesso! Repasse financeiro bloqueado e prazo de 48h iniciado.')
             return redirect('disputes:dispute_detail', dispute_id=dispute.id)
     else:
@@ -113,6 +115,7 @@ def dispute_detail_view(request, dispute_id):
                     descricao=f'Anexo enviado por {request.user.profile.nome if hasattr(request.user, "profile") else request.user.username}'
                 )
 
+            notificar_mensagem_disputa(dispute, papel)
             messages.success(request, 'Mensagem enviada com sucesso!')
             return redirect('disputes:dispute_detail', dispute_id=dispute.id)
     else:
@@ -197,6 +200,7 @@ def mediation_detail_view(request, dispute_id):
                         tipo=ext,
                         descricao='Documento anexado pela Mediação'
                     )
+                notificar_mensagem_disputa(dispute, 'mediador')
                 messages.success(request, 'Mensagem oficial da mediação enviada.')
                 return redirect('disputes:mediation_detail', dispute_id=dispute.id)
 
@@ -240,6 +244,7 @@ def mediation_detail_view(request, dispute_id):
                     messages.success(request, 'Decisão registrada a favor do Vendedor. Repasse em custódia liberado.')
 
                 dispute.save()
+                notificar_decisao_disputa(dispute)
                 return redirect('disputes:mediation_detail', dispute_id=dispute.id)
 
     return render(request, 'disputes/mediation_detail.html', {

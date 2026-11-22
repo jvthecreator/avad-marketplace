@@ -2,6 +2,8 @@ import datetime
 
 from django.utils import timezone
 
+from notifications.services import notificar_recebimento_confirmado
+
 from .models import Order, TrackingEvent, PRAZO_CONFIRMACAO_AUTOMATICA_DIAS
 
 
@@ -29,5 +31,6 @@ def confirmar_recebimentos_vencidos():
                 local=order.cep_entrega,
                 data_hora=order.entregue_em + datetime.timedelta(days=PRAZO_CONFIRMACAO_AUTOMATICA_DIAS),
             )
+            notificar_recebimento_confirmado(order, automatico=True)
             total += 1
     return total

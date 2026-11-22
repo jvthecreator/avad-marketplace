@@ -735,3 +735,8 @@ a {
   align-items: center;
   justify-content: center;
 }
+
+/* SININHO DE NOTIFICAÇÕES */
+.cart-badge.notif-badge {
+  background: #DC2626;
+}

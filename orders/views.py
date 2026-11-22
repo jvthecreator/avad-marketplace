@@ -6,6 +6,10 @@ from django.utils import timezone
 from .models import Order, TrackingEvent, Review, RefundRequest, generate_order_code, generate_tracking_code
 from .forms import CheckoutForm, RefundForm, ReviewForm
 from .services import confirmar_recebimentos_vencidos
+from notifications.services import (
+    notificar_novo_pedido, notificar_status_pedido, notificar_recebimento_confirmado,
+    notificar_nova_avaliacao, notificar_reembolso_solicitado, notificar_reembolso_resposta,
+)
 from accounts.roles import e_parte_do_pedido, pagina_inicial, tipo_usuario
 from catalog.models import Product
 from accounts.models import SavedCard
@@ -137,6 +141,7 @@ def checkout_view(request, product_id):
                 status_repasse=status_repasse
             )
 
+            notificar_novo_pedido(order)
             Cart(request).remove(product.id)  # tira do carrinho o item comprado
             messages.success(request, f'Compra realizada com sucesso! Pedido {order.codigo} gerado.')
             return redirect('orders:tracking', order_id=order.id)
@@ -235,6 +240,7 @@ def confirm_receipt_view(request, order_id):
             local=order.cep_entrega
         )
 
+        notificar_recebimento_confirmado(order)
         messages.success(request, 'Recebimento confirmado! Por favor, avalie a sua experiência.')
         return redirect('orders:review', order_id=order.id)
 
@@ -263,6 +269,7 @@ def review_view(request, order_id):
                 nota_transporte=form.cleaned_data['nota_transporte'],
                 comentario_transporte=form.cleaned_data['comentario_transporte']
             )
+            notificar_nova_avaliacao(order, form.cleaned_data['nota_vendedor'])
             messages.success(request, 'Avaliação enviada com sucesso! Obrigado pela colaboração.')
             return redirect('accounts:seller_profile', user_id=order.vendedor.id)
     else:
@@ -292,6 +299,7 @@ def refund_view(request, order_id):
                 valor_reembolso=order.valor_total,
                 status='solicitacao_enviada'
             )
+            notificar_reembolso_solicitado(refund)
             messages.success(request, f'Solicitação de reembolso {refund.protocolo} enviada.')
             return redirect('orders:refund_status', refund_id=refund.id)
     else:
@@ -333,6 +341,7 @@ def seller_orders_view(request):
 @login_required
 def advance_status_view(request, order_id):
     order = get_object_or_404(Order, pk=order_id, vendedor=request.user)
+    status_anterior = order.status
     novo_status = request.POST.get('status') or request.GET.get('status')
 
     status_transitions = {
@@ -373,6 +382,9 @@ def advance_status_view(request, order_id):
         )
         messages.success(request, f'Status do pedido {order.codigo} avançado para {order.get_status_display()}.')
 
+    if order.status != status_anterior:
+        notificar_status_pedido(order)
+
     return redirect('orders:seller_orders')
 
 
@@ -399,10 +411,12 @@ def refund_action_view(request, refund_id, action):
             local='Central Financeira AVaD'
         )
         messages.success(request, f'Reembolso {refund.protocolo} aprovado e estorno concluído.')
+        notificar_reembolso_resposta(refund)
     elif action == 'negar':
         refund.status = 'negado'
         refund.save()
         messages.warning(request, f'Reembolso {refund.protocolo} negado.')
+        notificar_reembolso_resposta(refund)
 
     return redirect('orders:seller_orders')
 
@@ -561,6 +575,7 @@ def _criar_pedido(request, form, product, qtd, cobrar_frete=True):
         valor_liquido_vendedor=liquido_vendedor,
         status_repasse=status_repasse
     )
+    notificar_novo_pedido(order)
     return order
 
 

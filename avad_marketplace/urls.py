@@ -13,6 +13,7 @@ urlpatterns = [
     path('finance/', include('finance.urls')),
     path('disputes/', include('disputes.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('notifications/', include('notifications.urls')),
 ]
 
 if settings.DEBUG:
