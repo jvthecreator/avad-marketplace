@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Carrinho — AVaD{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Meu Carrinho</h1>
+  <p style="font-size: 13px; color: var(--text-muted);">Altere quantidades, remova itens ou finalize a compra de cada produto</p>
+</div>
+
+{% if items %}
+<div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
+
+  <!-- LISTA DE ITENS -->
+  <div style="flex: 1 1 560px; display: flex; flex-direction: column; gap: 16px;">
+    {% for item in items %}
+      <div class="card" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+
+        <div style="width: 80px; height: 80px; background: #F3F4F6; border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          {% if item.product.imagem %}
+            <img src="{{ item.product.imagem.url }}" alt="{{ item.product.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+            <span style="font-size: 11px; color: #9CA3AF;">Sem foto</span>
+          {% endif %}
+        </div>
+
+        <div style="flex: 1 1 200px; min-width: 160px;">
+          <a href="{% url 'catalog:product_detail' item.product.id %}" style="font-weight: 600; font-size: 14px;">{{ item.product.titulo }}</a>
+          <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            R$ {{ item.product.preco|floatformat:"2g" }} cada
+          </div>
+          {% if item.disponivel %}
+            <div style="font-size: 12px; color: var(--text-muted);">Estoque: {{ item.product.estoque }} unid.</div>
+          {% else %}
+            <div style="font-size: 12px; color: #B91C1C; font-weight: 600;">Produto esgotado</div>
+          {% endif %}
+        </div>
+
+        {% if item.disponivel %}
+          <form method="post" action="{% url 'orders:cart_update' item.product.id %}" style="display: flex; align-items: center; gap: 6px;">
+            {% csrf_token %}
+            <input type="number" name="qtd" value="{{ item.qtd }}" min="1" max="{{ item.product.estoque }}"
+                   onchange="this.form.submit()"
+                   style="width: 60px; padding: 6px; text-align: center; font-weight: 600; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <button type="submit" class="btn btn-secondary btn-sm">Atualizar</button>
+          </form>
+
+          <div style="min-width: 110px; text-align: right;">
+            <div style="font-size: 11px; color: var(--text-muted);">Subtotal</div>
+            <strong>R$ {{ item.subtotal|floatformat:"2g" }}</strong>
+          </div>
+        {% endif %}
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          {% if item.disponivel %}
+            <a href="{% url 'orders:checkout' item.product.id %}?qtd={{ item.qtd }}" class="btn btn-primary btn-sm">Comprar</a>
+          {% endif %}
+          <form method="post" action="{% url 'orders:cart_remove' item.product.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm btn-block">Remover</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- RESUMO -->
+  <div class="card" style="flex: 0 0 320px;">
+    <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">Resumo</h2>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+      <span>Unidades</span><strong>{{ cart_count }}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+      <span>Subtotal</span><strong>R$ {{ total|floatformat:"2g" }}</strong>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted); margin: 12px 0;">
+      O frete é calculado na finalização. Use "Finalizar compra" para pagar todos os itens de uma vez ou "Comprar" para pagar só um deles.
+    </p>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-outline btn-block">Continuar comprando</a>
+    {% if total %}
+      <a href="{% url 'orders:cart_checkout' %}" class="btn btn-primary btn-block" style="margin-top: 10px;">Finalizar compra</a>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+  <div class="card" style="text-align: center; padding: 48px 16px;">
+    <div style="font-size: 40px; margin-bottom: 8px;">🛒</div>
+    <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">Seu carrinho está vazio</h2>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Explore o catálogo e adicione produtos.</p>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-primary">Ver catálogo</a>
+  </div>
+{% endif %}
+{% endblock %}

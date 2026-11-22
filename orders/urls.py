@@ -14,4 +14,9 @@ urlpatterns = [
     path('seller-orders/', views.seller_orders_view, name='seller_orders'),
     path('advance-status/<int:order_id>/', views.advance_status_view, name='advance_status'),
     path('refund-action/<int:refund_id>/<str:action>/', views.refund_action_view, name='refund_action'),
+    path('cart/', views.cart_view, name='cart'),
+    path('cart/add/<int:product_id>/', views.cart_add_view, name='cart_add'),
+    path('cart/update/<int:product_id>/', views.cart_update_view, name='cart_update'),
+    path('cart/remove/<int:product_id>/', views.cart_remove_view, name='cart_remove'),
+    path('cart/checkout/', views.cart_checkout_view, name='cart_checkout'),
 ]

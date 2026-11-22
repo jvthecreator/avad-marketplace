@@ -141,3 +141,19 @@ class RefundRequest(models.Model):
 
     def __str__(self):
         return f"{self.protocolo} - {self.pedido.codigo}"
+
+
+class CartItem(models.Model):
+    """Item do carrinho de um usuário (fica salvo no banco, não na sessão)."""
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
+    produto = models.ForeignKey('catalog.Product', on_delete=models.CASCADE, related_name='cart_items')
+    quantidade = models.PositiveIntegerField(default=1)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['criado_em']
+        unique_together = [('usuario', 'produto')]
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.produto.titulo} x{self.quantidade}"

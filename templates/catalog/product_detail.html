@@ -140,7 +140,7 @@
         <span style="font-size: 13px; font-weight: 600;">Quantidade:</span>
         <div style="display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
           <button type="button" id="qty-minus" style="padding: 6px 12px; background: #F3F4F6; border: none; cursor: pointer; font-weight: bold;">-</button>
-          <input type="number" id="qty-input" value="1" min="1" max="{{ product.estoque }}" style="width: 44px; text-align: center; border: none; outline: none; font-weight: 600;">
+          <input type="number" id="qty-input" name="qtd" form="form-add-cart" value="1" min="1" max="{{ product.estoque }}" style="width: 44px; text-align: center; border: none; outline: none; font-weight: 600;">
           <button type="button" id="qty-plus" style="padding: 6px 12px; background: #F3F4F6; border: none; cursor: pointer; font-weight: bold;">+</button>
         </div>
       </div>
@@ -151,9 +151,16 @@
           <a href="{% url 'orders:checkout' product.id %}?qtd=1" id="btn-buy-now" data-base-href="{% url 'orders:checkout' product.id %}" class="btn btn-primary btn-lg btn-block">
             Comprar Agora
           </a>
-          <button type="button" class="btn btn-outline btn-block" onclick="alert('Item adicionado à sacola!')">
-            Adicionar ao carrinho
-          </button>
+          {% if user.is_authenticated %}
+            <form id="form-add-cart" method="post" action="{% url 'orders:cart_add' product.id %}">
+              {% csrf_token %}
+            </form>
+            <button type="submit" form="form-add-cart" class="btn btn-outline btn-block">
+              Adicionar ao carrinho
+            </button>
+          {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-block">Entre para adicionar ao carrinho</a>
+          {% endif %}
         {% else %}
           <button class="btn btn-secondary btn-lg btn-block" disabled>Produto Esgotado</button>
         {% endif %}
