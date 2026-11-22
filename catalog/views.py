@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db.models import Q, Avg
 from .models import Product, CATEGORIAS
-from .forms import ProductForm
+from .forms import ProductForm, ProductEditForm
 from orders.models import Review
 import random
 
@@ -152,3 +154,36 @@ def calculate_frete_view(request):
         },
     ]
     return JsonResponse({'options': options})
+
+
+@login_required
+def product_edit_view(request, pk):
+    product = get_object_or_404(Product, pk=pk, vendedor=request.user, removido=False)
+
+    profile = getattr(request.user, 'profile', None)
+    if profile and profile.suspenso:
+        messages.error(request, 'Sua conta está suspensa. Não é possível editar anúncios.')
+        return redirect('dashboard:products')
+
+    if request.method == 'POST':
+        form = ProductEditForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Anúncio atualizado com sucesso!')
+            return redirect('dashboard:products')
+    else:
+        form = ProductEditForm(instance=product)
+
+    return render(request, 'catalog/product_edit.html', {'form': form, 'product': product})
+
+
+@login_required
+@require_POST
+def product_remove_view(request, pk):
+    product = get_object_or_404(Product, pk=pk, vendedor=request.user, removido=False)
+    # Não apaga do banco: os pedidos já feitos continuam com o produto no histórico
+    product.removido = True
+    product.ativo = False
+    product.save(update_fields=['removido', 'ativo'])
+    messages.success(request, f'Anúncio "{product.titulo}" removido.')
+    return redirect('dashboard:products')

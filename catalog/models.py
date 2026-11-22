@@ -13,6 +13,7 @@ CATEGORIAS = [
     ('moda', 'Moda'),
     ('esportes', 'Esportes'),
     ('livros', 'Livros'),
+    ('outros', 'Outros'),
 ]
 
 
@@ -27,6 +28,7 @@ class Product(models.Model):
     imagem = models.ImageField(upload_to='products/', blank=True, null=True)
     frete_gratis = models.BooleanField(default=False)
     ativo = models.BooleanField(default=True)
+    removido = models.BooleanField(default=False)  # anúncio removido pelo vendedor (some da loja e da lista)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:

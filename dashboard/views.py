@@ -99,7 +99,7 @@ def overview_view(request):
 
 @login_required
 def products_view(request):
-    products = Product.objects.filter(vendedor=request.user)
+    products = Product.objects.filter(vendedor=request.user, removido=False)
     return render(request, 'dashboard/products.html', {'products': products})
 
 

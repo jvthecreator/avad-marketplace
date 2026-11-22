@@ -62,7 +62,15 @@
             {% endif %}
           </td>
           <td>
-            <a href="{% url 'catalog:product_detail' p.id %}" target="_blank" class="btn btn-outline btn-sm">Ver na loja</a>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <a href="{% url 'catalog:product_detail' p.id %}" target="_blank" class="btn btn-outline btn-sm">Ver na loja</a>
+              <a href="{% url 'catalog:product_edit' p.id %}" class="btn btn-secondary btn-sm">Editar</a>
+              <form method="post" action="{% url 'catalog:product_remove' p.id %}" style="margin: 0;"
+                    onsubmit="return confirm('Remover este anúncio? Ele sairá da loja e da sua lista. O histórico de pedidos já feitos é mantido.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Remover anúncio</button>
+              </form>
+            </div>
           </td>
         </tr>
       {% empty %}

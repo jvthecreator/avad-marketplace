@@ -1,4 +1,5 @@
 from django import forms
+from django.core.files.uploadedfile import UploadedFile
 from .models import Product, CATEGORIAS
 
 PALAVRAS_PROIBIDAS = [
@@ -46,3 +47,21 @@ class ProductForm(forms.ModelForm):
             if p in descricao.lower():
                 raise forms.ValidationError("A descrição contém palavras não permitidas.")
         return descricao
+
+
+class ProductEditForm(ProductForm):
+    """Edição de anúncio: sem o aceite de termos e com o botão de ativar/pausar."""
+
+    class Meta(ProductForm.Meta):
+        fields = ProductForm.Meta.fields + ['ativo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop('aceito_termos')
+
+    def clean_imagem(self):
+        imagem = self.cleaned_data.get('imagem')
+        # só valida se o vendedor enviou uma imagem nova (a atual não é revalidada)
+        if isinstance(imagem, UploadedFile):
+            return super().clean_imagem()
+        return imagem
