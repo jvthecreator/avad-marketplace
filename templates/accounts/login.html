@@ -13,11 +13,11 @@
     {% for message in messages %}
       {% if message.message == 'email_not_found' %}
         <div class="alert alert-danger">
-          Seu email não está registrado, para registrar <a href="{% url 'accounts:register' %}" style="text-decoration: underline; font-weight: 700;">clique aqui</a>
+          Seu email não está registrado, para registrar <a href="{% url 'accounts:register' %}" style="text-decoration: underline; font-weight: 700; margin-left: 4px;">clique aqui</a>
         </div>
       {% elif message.message == 'wrong_password' %}
         <div class="alert alert-danger">
-          Senha incorreta. Caso deseje trocar sua senha <a href="{% url 'accounts:password_change' %}" style="text-decoration: underline; font-weight: 700;">clique aqui</a>
+          Senha incorreta. Caso deseje trocar sua senha <a href="{% url 'accounts:password_change' %}" style="text-decoration: underline; font-weight: 700; margin-left: 4px;">clique aqui</a>
         </div>
       {% endif %}
     {% endfor %}
