@@ -18,7 +18,6 @@ class CheckoutForm(forms.Form):
     metodo_frete = forms.ChoiceField(label='Método de envio', choices=[
         ('pac', 'PAC'),
         ('sedex', 'SEDEX'),
-        ('avad_express', 'Transportadora AVAD Express'),
     ], widget=forms.RadioSelect())
 
     forma_pagamento = forms.ChoiceField(label='Forma de pagamento', choices=[

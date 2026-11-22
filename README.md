@@ -16,7 +16,7 @@ O **AVaD** resolve a desconfiança em transações eletrônicas através de um e
 2. **Vendedor**: Cadastro de anúncios (produtos e serviços), gestão do ciclo de pedidos, visualização do split com alerta de retenção em custódia (*escrow*), desbloqueio de conta bancária e Dashboard analítico com KPIs e gráfico Canvas.
 3. **Suporte de Vendas (Mediador)**: Painel operacional consolidado em 3 colunas com auditoria de dados, histórico em abas (mensagens, logística, financeiro, evidências), rastreio e emissão de decisão arbitral vinculante.
 4. **Simulador Bancário Integrado**: Simulação de gateway de pagamento com cenários de **Aprovação**, **Transação Negada** e **Timeout (> 40s)**.
-5. **Simulador Logístico Integrado**: Cálculo em tempo real para `PAC`, `SEDEX` e `Transportadora AVAD Express`, geração de etiquetas de rastreio (`BRXXXXXXXXXAV`) e timeline de movimentações.
+5. **Simulador Logístico Integrado**: Cálculo em tempo real para `PAC` e `SEDEX`, geração de etiquetas de rastreio (`BRXXXXXXXXXAV`) e timeline de movimentações.
 
 ---
 

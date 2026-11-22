@@ -17,7 +17,6 @@ STATUS_CHOICES = [
 METODO_FRETE_CHOICES = [
     ('pac', 'PAC'),
     ('sedex', 'SEDEX'),
-    ('avad_express', 'Transportadora AVAD Express'),
 ]
 
 FORMA_PAGAMENTO_CHOICES = [

@@ -105,17 +105,6 @@
             </div>
             <strong>R$ {{ frete_sedex|floatformat:"2g" }}</strong>
           </label>
-
-          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="radio" name="metodo_frete" value="avad_express">
-              <div>
-                <strong>Transportadora AVAD Express</strong>
-                <div style="font-size: 12px; color: var(--text-muted);">Entrega prioritária em até 2 dias úteis com seguro integral</div>
-              </div>
-            </div>
-            <strong>R$ {{ frete_express|floatformat:"2g" }}</strong>
-          </label>
         </div>
       </div>
 
@@ -219,8 +208,7 @@
       <div class="card" id="resumo-card" style="position: sticky; top: 80px;"
            data-subtotal="{{ subtotal|unlocalize }}"
            data-frete-pac="{{ frete_pac|unlocalize }}"
-           data-frete-sedex="{{ frete_sedex|unlocalize }}"
-           data-frete-express="{{ frete_express|unlocalize }}">
+           data-frete-sedex="{{ frete_sedex|unlocalize }}">
         <h2 class="card-title" style="margin-bottom: 16px;">Resumo do pedido</h2>
 
         <!-- ITENS -->
@@ -248,10 +236,6 @@
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Frete estimado:</span>
             <span id="resumo-frete">{% if frete_pac == 0 %}Grátis{% else %}R$ {{ frete_pac|floatformat:"2g" }}{% endif %}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; color: #10B981;">
-            <span>Cupom aplicado:</span>
-            <span>- R$ 0,00</span>
           </div>
         </div>
 
@@ -284,8 +268,7 @@
     var subtotal = parseFloat(card.dataset.subtotal) || 0;
     var fretes = {
       pac: parseFloat(card.dataset.fretePac) || 0,
-      sedex: parseFloat(card.dataset.freteSedex) || 0,
-      avad_express: parseFloat(card.dataset.freteExpress) || 0
+      sedex: parseFloat(card.dataset.freteSedex) || 0
     };
     var fmt = function (v) {
       return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

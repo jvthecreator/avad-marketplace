@@ -315,8 +315,8 @@ class Command(BaseCommand):
                 'quantidade': 1,
                 'preco_unitario': p1.preco,
                 'valor_frete': Decimal('0.00'),
-                'metodo_frete': 'avad_express',
-                'prazo_dias': 2,
+                'metodo_frete': 'sedex',
+                'prazo_dias': 3,
                 'valor_total': p1.preco,
                 'forma_pagamento': 'pix',
                 'parcelas': 1,
@@ -346,7 +346,7 @@ class Command(BaseCommand):
                 'nota_vendedor': 5,
                 'comentario_vendedor': 'Aparelho fantástico, acabamento premium e câmera surreal. Loja confiável!',
                 'nota_transporte': 5,
-                'comentario_transporte': 'AVAD Express entregou em 24 horas!',
+                'comentario_transporte': 'Entregou em 24 horas!',
             }
         )
 
@@ -398,10 +398,10 @@ class Command(BaseCommand):
                 'produto': p5,
                 'quantidade': 1,
                 'preco_unitario': p5.preco,
-                'valor_frete': Decimal('58.00'),
-                'metodo_frete': 'avad_express',
-                'prazo_dias': 2,
-                'valor_total': p5.preco + Decimal('58.00'),
+                'valor_frete': Decimal('45.90'),
+                'metodo_frete': 'sedex',
+                'prazo_dias': 3,
+                'valor_total': p5.preco + Decimal('45.90'),
                 'forma_pagamento': 'cartao',
                 'parcelas': 10,
                 'cep_entrega': '01310-100',
@@ -417,7 +417,7 @@ class Command(BaseCommand):
             defaults={
                 'total_pago': order4.valor_total,
                 'comissao_marketplace': round(p5.preco * Decimal('0.065'), 2),
-                'valor_frete_logistica': Decimal('58.00'),
+                'valor_frete_logistica': Decimal('45.90'),
                 'valor_liquido_vendedor': p5.preco - round(p5.preco * Decimal('0.065'), 2),
                 'status_repasse': 'retido',  # Demonstração de Escrow por conta bloqueada
             }

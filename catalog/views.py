@@ -124,7 +124,6 @@ def calculate_frete_view(request):
 
     base_pac = round(random.uniform(15, 35), 2)
     base_sedex = round(base_pac * 1.8, 2)
-    base_express = round(base_pac * 2.2, 2)
 
     try:
         product = Product.objects.get(pk=product_id)
@@ -145,12 +144,6 @@ def calculate_frete_view(request):
             'price': 'R$ ' + f'{base_sedex:.2f}'.replace('.', ','),
             'price_value': base_sedex,
             'days': random.randint(3, 7),
-        },
-        {
-            'method': 'Transportadora AVAD Express',
-            'price': 'R$ ' + f'{base_express:.2f}'.replace('.', ','),
-            'price_value': base_express,
-            'days': random.randint(1, 3),
         },
     ]
     return JsonResponse({'options': options})

@@ -58,7 +58,6 @@ def checkout_view(request, product_id):
             frete_map = {
                 'pac': (Decimal('0.00') if product.frete_gratis else Decimal('22.50'), 8),
                 'sedex': (Decimal('45.90'), 3),
-                'avad_express': (Decimal('58.00'), 2),
             }
             valor_frete, prazo_dias = frete_map.get(metodo, (Decimal('20.00'), 7))
 
@@ -464,7 +463,6 @@ def _frete_e_prazo(metodo, product):
         return (Decimal('0.00') if product.frete_gratis else Decimal('22.50'), 8)
     tabela = {
         'sedex': (Decimal('45.90'), 3),
-        'avad_express': (Decimal('58.00'), 2),
     }
     return tabela.get(metodo, (Decimal('20.00'), 7))
 
@@ -478,14 +476,13 @@ def _summary_context(items):
     subtotal = sum(i['subtotal'] for i in items)
     fretes = {
         m: max(_frete_e_prazo(m, i['product'])[0] for i in items)
-        for m in ('pac', 'sedex', 'avad_express')
+        for m in ('pac', 'sedex')
     }
     return {
         'items': items,
         'subtotal': subtotal,
         'frete_pac': fretes['pac'],
         'frete_sedex': fretes['sedex'],
-        'frete_express': fretes['avad_express'],
         'total_inicial': subtotal + fretes['pac'],
     }
 
