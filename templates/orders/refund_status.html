@@ -5,7 +5,12 @@
 {% block content %}
 <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
   <a href="{% url 'home' %}">Início</a> &rsaquo;
-  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  {% if request.tipo_usuario == 'vendedor' %}
+    <a href="{% url 'orders:seller_orders' %}">Gestão de Pedidos</a>
+  {% else %}
+    <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a>
+  {% endif %}
+  &rsaquo;
   <span>Protocolo {{ refund.protocolo }}</span>
 </div>
 
@@ -73,7 +78,11 @@
     </div>
 
     <div style="margin-top: 24px; text-align: center;">
-      <a href="{% url 'orders:my_orders' %}" class="btn btn-outline">Voltar para Meus Pedidos</a>
+      {% if request.tipo_usuario == 'vendedor' %}
+        <a href="{% url 'orders:seller_orders' %}" class="btn btn-outline">Voltar para Gestão de Pedidos</a>
+      {% else %}
+        <a href="{% url 'orders:my_orders' %}" class="btn btn-outline">Voltar para Meus Pedidos</a>
+      {% endif %}
     </div>
   </div>
 </div>

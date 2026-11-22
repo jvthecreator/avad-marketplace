@@ -19,7 +19,13 @@
     <div style="display: flex; gap: 12px;">
       <a href="{% url 'catalog:product_list' %}" class="btn btn-success btn-lg">Explorar Catálogo</a>
       {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:overview' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Painel do Vendedor</a>
+        {% if request.tipo_usuario == 'vendedor' %}
+          <a href="{% url 'dashboard:overview' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Painel do Vendedor</a>
+        {% elif request.tipo_usuario == 'mediador' %}
+          <a href="{% url 'disputes:mediation_panel' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Painel de Mediação</a>
+        {% else %}
+          <a href="{% url 'orders:my_orders' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Meus Pedidos</a>
+        {% endif %}
       {% else %}
         <a href="{% url 'accounts:register' %}" class="btn btn-outline btn-lg" style="color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3);">Cadastre-se Grátis</a>
       {% endif %}

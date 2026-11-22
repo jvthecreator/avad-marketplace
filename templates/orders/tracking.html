@@ -5,7 +5,14 @@
 {% block content %}
 <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
   <a href="{% url 'home' %}">Início</a> &rsaquo;
-  <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a> &rsaquo;
+  {% if request.tipo_usuario == 'vendedor' %}
+    <a href="{% url 'orders:seller_orders' %}">Gestão de Pedidos</a>
+  {% elif request.tipo_usuario == 'mediador' %}
+    <a href="{% url 'disputes:mediation_panel' %}">Painel de Mediação</a>
+  {% else %}
+    <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a>
+  {% endif %}
+  &rsaquo;
   <span>Rastreio de {{ order.codigo }}</span>
 </div>
 
@@ -129,7 +136,7 @@
       </div>
 
       {% if order.status == 'entregue' and not order.recebimento_confirmado %}
-        {% if request.user == order.comprador %}
+        {% if request.tipo_usuario == 'comprador' %}
           <div style="margin-top: 16px;">
             <a href="{% url 'orders:confirm_receipt' order.id %}" class="btn btn-success btn-block btn-sm">Confirmar Recebimento</a>
             {% if order.confirmacao_automatica_em %}

@@ -6,6 +6,7 @@ from django.utils import timezone
 from .models import Order, TrackingEvent, Review, RefundRequest, generate_order_code, generate_tracking_code
 from .forms import CheckoutForm, RefundForm, ReviewForm
 from .services import confirmar_recebimentos_vencidos
+from accounts.roles import e_parte_do_pedido, pagina_inicial, tipo_usuario
 from catalog.models import Product
 from accounts.models import SavedCard
 from finance.models import PaymentSplit
@@ -195,9 +196,9 @@ def my_orders_view(request):
 def tracking_view(request, order_id):
     confirmar_recebimentos_vencidos()
     order = get_object_or_404(Order, pk=order_id)
-    if order.comprador != request.user and order.vendedor != request.user and not (hasattr(request.user, 'profile') and request.user.profile.is_mediador):
+    if not e_parte_do_pedido(request, order.comprador, order.vendedor):
         messages.error(request, 'Acesso não autorizado.')
-        return redirect('orders:my_orders')
+        return redirect(pagina_inicial(request))
 
     events = order.tracking_events.all().order_by('-data_hora')
     previsao_entrega = order.criado_em + datetime.timedelta(days=order.prazo_dias)
@@ -305,9 +306,9 @@ def refund_view(request, order_id):
 @login_required
 def refund_status_view(request, refund_id):
     refund = get_object_or_404(RefundRequest, pk=refund_id)
-    if refund.pedido.comprador != request.user and refund.pedido.vendedor != request.user:
+    if tipo_usuario(request) == 'mediador' or not e_parte_do_pedido(request, refund.pedido.comprador, refund.pedido.vendedor):
         messages.error(request, 'Acesso não autorizado.')
-        return redirect('orders:my_orders')
+        return redirect(pagina_inicial(request))
 
     return render(request, 'orders/refund_status.html', {
         'refund': refund,

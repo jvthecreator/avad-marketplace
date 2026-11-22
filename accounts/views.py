@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm, PasswordChangeForm
 from .models import UserProfile
+from .roles import tipo_usuario, pagina_inicial
 from orders.models import Review
 from django.db.models import Avg, Count, Q
 import uuid
@@ -73,6 +74,15 @@ def verify_email_view(request, token):
 
 
 def login_view(request):
+    # Quem já está logado não pode trocar de tipo por aqui: precisa sair da conta primeiro
+    if request.user.is_authenticated:
+        messages.info(
+            request,
+            f'Você já está logado como {tipo_usuario(request)}. '
+            f'Para entrar com outro tipo de usuário, saia da conta primeiro.'
+        )
+        return redirect(pagina_inicial(request))
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
         missing = []

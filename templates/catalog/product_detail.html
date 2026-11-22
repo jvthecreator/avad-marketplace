@@ -135,6 +135,11 @@
         <div id="frete-results"></div>
       </div>
 
+      {% if request.tipo_usuario and request.tipo_usuario != 'comprador' %}
+        <div class="alert alert-info" style="margin-bottom: 20px;">
+          <span>Você entrou como <strong>{{ request.tipo_usuario }}</strong>. Para comprar, saia da conta e entre novamente como comprador.</span>
+        </div>
+      {% else %}
       <!-- SELETOR DE QUANTIDADE -->
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
         <span style="font-size: 13px; font-weight: 600;">Quantidade:</span>
@@ -165,6 +170,8 @@
           <button class="btn btn-secondary btn-lg btn-block" disabled>Produto Esgotado</button>
         {% endif %}
       </div>
+
+      {% endif %}
 
       <!-- SELO DE PROTEÇÃO AVAD -->
       <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px; font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">

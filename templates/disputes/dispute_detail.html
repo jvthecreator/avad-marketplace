@@ -5,8 +5,10 @@
 {% block content %}
 <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
   <a href="{% url 'home' %}">Início</a> &rsaquo;
-  {% if request.user == dispute.vendedor %}
+  {% if request.tipo_usuario == 'vendedor' %}
     <a href="{% url 'disputes:seller_disputes' %}">Disputas do Vendedor</a>
+  {% elif request.tipo_usuario == 'mediador' %}
+    <a href="{% url 'disputes:mediation_panel' %}">Painel de Mediação</a>
   {% else %}
     <a href="{% url 'orders:my_orders' %}">Meus Pedidos</a>
   {% endif %}

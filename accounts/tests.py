@@ -62,6 +62,13 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             ativo=True
         )
 
+    def entrar_como(self, username, tipo):
+        """Faz login e define o tipo de usuário escolhido (como a tela de login faz)."""
+        self.client.login(username=username, password='senha1234')
+        sessao = self.client.session
+        sessao['tipo_usuario'] = tipo
+        sessao.save()
+
     def test_pro001_register_validation_and_flow(self):
         # Empty fields
         res = self.client.post('/accounts/register/', {})
@@ -125,7 +132,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         self.assertContains(res, 'Verificação concluída! Sua senha foi alterada com sucesso. Clique aqui para fazer seu login')
 
     def test_pro004_create_product(self):
-        self.client.login(username='felipe@lojadech.com', password='senha1234')
+        self.entrar_como('felipe@lojadech.com', 'vendedor')
         res = self.client.post('/catalog/product/new/', {
             'titulo': 'Tablet Pro 11',
             'categoria': 'tecnologia',
@@ -138,7 +145,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         self.assertTrue(Product.objects.filter(titulo='Tablet Pro 11').exists())
 
     def test_pro005_and_pro006_checkout_split_escrow(self):
-        self.client.login(username='marina@avad.com', password='senha1234')
+        self.entrar_como('marina@avad.com', 'comprador')
 
         # Checkout test with rejected simulation
         res = self.client.post(f'/orders/checkout/{self.product.id}/', {
@@ -213,7 +220,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         )
 
         # Buyer opens dispute
-        self.client.login(username='marina@avad.com', password='senha1234')
+        self.entrar_como('marina@avad.com', 'comprador')
         res = self.client.post(f'/disputes/open/{order.id}/', {
             'motivo': 'Produto não entregue',
             'descricao': 'O prazo estourou e não recebi nada.',
@@ -229,7 +236,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         self.assertEqual(order.split.status_repasse, 'retido')
 
         # Mediator accesses 3-column panel and decides for buyer
-        self.client.login(username='mediador@avad.com', password='senha1234')
+        self.entrar_como('mediador@avad.com', 'mediador')
         res = self.client.get(f'/disputes/mediation/{dispute.id}/')
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, 'Partes envolvidas')
@@ -262,12 +269,12 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             valor_total=self.product.preco,
             status='aguardando_confirmacao'
         )
-        self.client.login(username='marina@avad.com', password='senha1234')
+        self.entrar_como('marina@avad.com', 'comprador')
         res = self.client.get(f'/orders/tracking/{order.id}/')
         self.assertContains(res, 'Confirmação vendedor')
 
         # Seller advances status
-        self.client.login(username='felipe@lojadech.com', password='senha1234')
+        self.entrar_como('felipe@lojadech.com', 'vendedor')
         res = self.client.get(f'/orders/advance-status/{order.id}/')
         order.refresh_from_db()
         self.assertEqual(order.status, 'preparando')
@@ -284,7 +291,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             status='entregue',
             recebimento_confirmado=True
         )
-        self.client.login(username='marina@avad.com', password='senha1234')
+        self.entrar_como('marina@avad.com', 'comprador')
         res = self.client.post(f'/orders/review/{order.id}/', {
             'nota_vendedor': 5,
             'comentario_vendedor': 'Ótimo atendimento!',
@@ -305,7 +312,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             valor_total=Decimal('2010.00'),
             status='entregue',
         )
-        self.client.login(username='marina@avad.com', password='senha1234')
+        self.entrar_como('marina@avad.com', 'comprador')
         res = self.client.post(f'/orders/refund/{order.id}/', {
             'motivo': 'insatisfeito',
             'comentario': 'Não atendeu às minhas expectativas.',
@@ -321,9 +328,55 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         self.assertContains(res, 'Avaliações e comentários')
 
     def test_pro012_seller_dashboard(self):
-        self.client.login(username='felipe@lojadech.com', password='senha1234')
+        self.entrar_como('felipe@lojadech.com', 'vendedor')
         res = self.client.get('/dashboard/')
         self.assertContains(res, 'Vendas no ano')
         self.assertContains(res, 'Evolução das vendas')
         self.assertContains(res, 'Mais vendidos')
         self.assertContains(res, 'Insights rápidos')
+
+    def test_pro013_tipos_de_usuario_independentes(self):
+        # Vendedor não acessa telas de comprador nem de mediador
+        self.entrar_como('felipe@lojadech.com', 'vendedor')
+        for url in ['/orders/my-orders/', '/orders/cart/', '/disputes/mediation/']:
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, 302, url)
+            self.assertTrue(res.url.startswith('/dashboard/'), url)
+        self.assertEqual(self.client.get('/dashboard/').status_code, 200)
+
+        # Comprador não acessa o painel do vendedor, o financeiro nem a criação de anúncios
+        self.entrar_como('marina@avad.com', 'comprador')
+        for url in ['/dashboard/', '/finance/', '/catalog/product/new/', '/orders/seller-orders/']:
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, 302, url)
+            self.assertEqual(res.url, '/', url)
+        self.assertEqual(self.client.get('/orders/my-orders/').status_code, 200)
+
+        # Mediador não acessa telas de comprador nem de vendedor
+        self.entrar_como('mediador@avad.com', 'mediador')
+        for url in ['/orders/my-orders/', '/orders/cart/', '/dashboard/', '/finance/']:
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, 302, url)
+            self.assertTrue(res.url.startswith('/disputes/mediation/'), url)
+        self.assertEqual(self.client.get('/disputes/mediation/').status_code, 200)
+
+    def test_pro014_nao_troca_de_tipo_sem_sair(self):
+        self.entrar_como('marina@avad.com', 'comprador')
+        res = self.client.post('/accounts/login/', {
+            'email': 'marina@avad.com',
+            'senha': 'senha1234',
+            'tipo_usuario': 'vendedor',
+        })
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(self.client.session['tipo_usuario'], 'comprador')
+        self.assertEqual(self.client.get('/dashboard/').status_code, 302)
+
+        # Saindo da conta, pode entrar com outro tipo
+        self.client.get('/accounts/logout/')
+        res = self.client.post('/accounts/login/', {
+            'email': 'marina@avad.com',
+            'senha': 'senha1234',
+            'tipo_usuario': 'vendedor',
+        })
+        self.assertEqual(self.client.session['tipo_usuario'], 'vendedor')
+        self.assertEqual(self.client.get('/dashboard/').status_code, 200)

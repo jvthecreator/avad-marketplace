@@ -6,6 +6,7 @@ from .models import Dispute, DisputeMessage, DisputeEvidence
 from .forms import DisputeForm, DisputeMessageForm, MediatorDecisionForm
 from orders.models import Order, TrackingEvent
 from finance.models import PaymentSplit
+from accounts.roles import e_parte_do_pedido, pagina_inicial, tipo_usuario
 import random
 
 
@@ -84,15 +85,15 @@ def open_dispute_view(request, order_id):
 def dispute_detail_view(request, dispute_id):
     dispute = get_object_or_404(Dispute, pk=dispute_id)
 
-    if dispute.comprador != request.user and dispute.vendedor != request.user and not (hasattr(request.user, 'profile') and request.user.profile.is_mediador):
+    if not e_parte_do_pedido(request, dispute.comprador, dispute.vendedor):
         messages.error(request, 'Acesso não autorizado.')
-        return redirect('orders:my_orders')
+        return redirect(pagina_inicial(request))
 
     if request.method == 'POST':
         form = DisputeMessageForm(request.POST, request.FILES)
         if form.is_valid():
             msg_text = form.cleaned_data['mensagem']
-            papel = 'mediador' if (hasattr(request.user, 'profile') and request.user.profile.is_mediador) else ('vendedor' if request.user == dispute.vendedor else 'comprador')
+            papel = tipo_usuario(request)  # comprador, vendedor ou mediador, conforme o login
 
             DisputeMessage.objects.create(
                 disputa=dispute,
