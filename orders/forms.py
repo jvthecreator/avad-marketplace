@@ -79,3 +79,20 @@ class ReviewForm(forms.Form):
                                          widget=forms.HiddenInput(attrs={'id': 'nota_transporte'}))
     comentario_transporte = forms.CharField(required=False, label='Comentário (opcional)',
                                             widget=forms.Textarea(attrs={'class': 'form-input', 'rows': 3}))
+
+    def clean(self):
+        cleaned = super().clean()
+        campos = {
+            'nota_vendedor': 'Vendedor',
+            'nota_transporte': 'Empresa de Transporte',
+        }
+        # nota 0 (ou ausente) não é permitida: é preciso dar pelo menos 1 estrela
+        faltando = [nome for campo, nome in campos.items() if not cleaned.get(campo)]
+        for campo in campos:
+            if not cleaned.get(campo) and campo not in self.errors:
+                self.add_error(campo, 'Selecione pelo menos 1 estrela.')
+        if faltando:
+            raise forms.ValidationError(
+                'Para enviar a avaliação, dê pelo menos 1 estrela para: ' + ' e '.join(faltando) + '.'
+            )
+        return cleaned
