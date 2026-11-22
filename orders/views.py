@@ -5,6 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from .models import Order, TrackingEvent, Review, RefundRequest, generate_order_code, generate_tracking_code
 from .forms import CheckoutForm, RefundForm, ReviewForm
+from .services import confirmar_recebimentos_vencidos
 from catalog.models import Product
 from accounts.models import SavedCard
 from finance.models import PaymentSplit
@@ -159,6 +160,7 @@ def checkout_view(request, product_id):
 
 @login_required
 def my_orders_view(request):
+    confirmar_recebimentos_vencidos()
     orders = Order.objects.filter(comprador=request.user)
 
     # Filter tab
@@ -191,6 +193,7 @@ def my_orders_view(request):
 
 @login_required
 def tracking_view(request, order_id):
+    confirmar_recebimentos_vencidos()
     order = get_object_or_404(Order, pk=order_id)
     if order.comprador != request.user and order.vendedor != request.user and not (hasattr(request.user, 'profile') and request.user.profile.is_mediador):
         messages.error(request, 'Acesso não autorizado.')
@@ -208,7 +211,17 @@ def tracking_view(request, order_id):
 
 @login_required
 def confirm_receipt_view(request, order_id):
-    order = get_object_or_404(Order, pk=order_id, comprador=request.user)
+    order = get_object_or_404(Order, pk=order_id)
+
+    # Só o comprador pode confirmar o recebimento
+    if order.comprador != request.user:
+        messages.error(request, 'Apenas o comprador pode confirmar o recebimento.')
+        return redirect('orders:my_orders')
+
+    if order.recebimento_confirmado:
+        messages.info(request, 'O recebimento deste pedido já foi confirmado.')
+        return redirect('orders:tracking', order_id=order.id)
+
     if request.method == 'POST':
         order.recebimento_confirmado = True
         order.status = 'entregue'
@@ -304,6 +317,7 @@ def refund_status_view(request, refund_id):
 
 @login_required
 def seller_orders_view(request):
+    confirmar_recebimentos_vencidos()
     orders = Order.objects.filter(vendedor=request.user)
     status_filter = request.GET.get('status', '')
     if status_filter:

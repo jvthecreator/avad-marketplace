@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import datetime
 import random
 import string
 from django.utils import timezone
@@ -49,6 +50,10 @@ def generate_refund_protocol():
     return f"REE-2026-{num:05d}"
 
 
+# Prazo para o comprador confirmar o recebimento; depois disso a confirmação é automática
+PRAZO_CONFIRMACAO_AUTOMATICA_DIAS = 14
+
+
 class Order(models.Model):
     codigo = models.CharField(max_length=20, unique=True, default=generate_order_code)
     comprador = models.ForeignKey(User, on_delete=models.CASCADE, related_name='compras')
@@ -67,6 +72,7 @@ class Order(models.Model):
     codigo_rastreio = models.CharField(max_length=20, blank=True, default='')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='aguardando_pagamento')
     recebimento_confirmado = models.BooleanField(default=False)
+    entregue_em = models.DateTimeField(null=True, blank=True)  # quando o pedido passou a 'entregue'
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -74,6 +80,22 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - {self.produto.titulo}"
+
+    def save(self, *args, **kwargs):
+        # Registra o momento da entrega (início do prazo de 14 dias para confirmar)
+        if self.status == 'entregue' and self.entregue_em is None:
+            self.entregue_em = timezone.now()
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = {*update_fields, 'entregue_em'}
+        super().save(*args, **kwargs)
+
+    @property
+    def confirmacao_automatica_em(self):
+        """Data em que o recebimento será confirmado automaticamente."""
+        if self.entregue_em:
+            return self.entregue_em + datetime.timedelta(days=PRAZO_CONFIRMACAO_AUTOMATICA_DIAS)
+        return None
 
     @property
     def status_display_badge(self):

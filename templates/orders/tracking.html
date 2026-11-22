@@ -129,9 +129,20 @@
       </div>
 
       {% if order.status == 'entregue' and not order.recebimento_confirmado %}
-        <div style="margin-top: 16px;">
-          <a href="{% url 'orders:confirm_receipt' order.id %}" class="btn btn-success btn-block btn-sm">Confirmar Recebimento</a>
-        </div>
+        {% if request.user == order.comprador %}
+          <div style="margin-top: 16px;">
+            <a href="{% url 'orders:confirm_receipt' order.id %}" class="btn btn-success btn-block btn-sm">Confirmar Recebimento</a>
+            {% if order.confirmacao_automatica_em %}
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; text-align: center;">
+                Se você não confirmar, o recebimento será confirmado automaticamente em {{ order.confirmacao_automatica_em|date:"d/m/Y" }}.
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
+            Aguardando o comprador confirmar o recebimento{% if order.confirmacao_automatica_em %} (confirmação automática em {{ order.confirmacao_automatica_em|date:"d/m/Y" }}){% endif %}.
+          </div>
+        {% endif %}
       {% endif %}
     </div>
   </div>
