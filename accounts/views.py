@@ -103,10 +103,15 @@ def login_view(request):
                 messages.error(request, 'Email não verificado. Verifique sua caixa de entrada.')
                 return render(request, 'accounts/login.html', {'form': form, 'missing_fields': []})
 
+            # Bloqueia quem escolheu "mediador" mas não é mediador (antes de criar a sessão)
+            if tipo == 'mediador' and not user.profile.is_mediador:
+                messages.error(request, 'Este usuário não é mediador. Selecione outro tipo de usuário para entrar.')
+                return render(request, 'accounts/login.html', {'form': form, 'missing_fields': []})
+
             login(request, user)
             request.session['tipo_usuario'] = tipo
 
-            if tipo == 'mediador' and hasattr(user, 'profile') and user.profile.is_mediador:
+            if tipo == 'mediador':
                 return redirect('disputes:mediation_panel')
             elif tipo == 'vendedor':
                 return redirect('dashboard:overview')
