@@ -20,20 +20,20 @@
 <div class="kpi-grid">
   <div class="kpi-card">
     <div class="kpi-title">Repasses realizados</div>
-    <div class="kpi-val" style="color: #059669;">R$ {{ realizados }}</div>
+    <div class="kpi-val" style="color: #059669;">R$ {{ realizados|floatformat:"2g" }}</div>
     <div class="kpi-badge positive">✓ Transferido para conta</div>
   </div>
 
   <div class="kpi-card">
     <div class="kpi-title">Programados (a receber)</div>
-    <div class="kpi-val" style="color: #2563EB;">R$ {{ programados }}</div>
+    <div class="kpi-val" style="color: #2563EB;">R$ {{ programados|floatformat:"2g" }}</div>
     <div class="kpi-badge" style="color: #2563EB;">Aguardando entrega do pedido</div>
   </div>
 
   <div class="kpi-card" style="{% if retidos > 0 %}border-color: #F59E0B; background-color: #FFFDF5;{% endif %}">
     <div class="kpi-title">Retido em conta transitória (escrow)</div>
     <div class="kpi-val" style="color: {% if retidos > 0 %}#D97706{% else %}var(--text-muted){% endif %};">
-      R$ {{ retidos }}
+      R$ {{ retidos|floatformat:"2g" }}
     </div>
     <div class="kpi-badge" style="color: #D97706;">🔒 Protegido em custódia</div>
   </div>

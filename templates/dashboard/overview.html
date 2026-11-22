@@ -26,28 +26,28 @@
   <!-- VENDAS NO ANO -->
   <div class="kpi-card">
     <div class="kpi-title">Vendas no ano</div>
-    <div class="kpi-val">R$ {{ vendas_ano }}</div>
+    <div class="kpi-val">R$ {{ vendas_ano|floatformat:"2g" }}</div>
     <div class="kpi-badge positive">↑ +18,4% vs ano anterior</div>
   </div>
 
   <!-- VENDAS NO MÊS -->
   <div class="kpi-card">
     <div class="kpi-title">Vendas no mês</div>
-    <div class="kpi-val">R$ {{ vendas_mes }}</div>
+    <div class="kpi-val">R$ {{ vendas_mes|floatformat:"2g" }}</div>
     <div class="kpi-badge positive">↑ +12,1% vs mês anterior</div>
   </div>
 
   <!-- VENDAS NA SEMANA -->
   <div class="kpi-card">
     <div class="kpi-title">Vendas na semana</div>
-    <div class="kpi-val">R$ {{ vendas_semana }}</div>
+    <div class="kpi-val">R$ {{ vendas_semana|floatformat:"2g" }}</div>
     <div class="kpi-badge positive">↑ +5,8% vs semana anterior</div>
   </div>
 
   <!-- RECEITA LÍQUIDA -->
   <div class="kpi-card">
     <div class="kpi-title">Receita líquida</div>
-    <div class="kpi-val" style="color: #059669;">R$ {{ receita_liquida }}</div>
+    <div class="kpi-val" style="color: #059669;">R$ {{ receita_liquida|floatformat:"2g" }}</div>
     <div class="kpi-badge positive">Taxa de split: 93,5%</div>
   </div>
 
@@ -149,7 +149,7 @@
             </div>
             <div style="text-align: right;">
               <div><strong>{{ item.total_qtd }} un.</strong></div>
-              <div style="font-size: 11px; color: #10B981;">R$ {{ item.total_val }}</div>
+              <div style="font-size: 11px; color: #10B981;">R$ {{ item.total_val|floatformat:"2g" }}</div>
             </div>
           </div>
         {% endfor %}
@@ -190,7 +190,7 @@
       <div style="background: #142621; color: #FFFFFF; padding: 16px; border-radius: var(--radius-md); margin-top: 4px;">
         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
           <span>Meta mensal de vendas</span>
-          <strong>R$ {{ vendas_mes }} / R$ 25.000,00</strong>
+          <strong>R$ {{ vendas_mes|floatformat:"2g" }} / R$ 25.000,00</strong>
         </div>
         <div class="progress-bar-bg" style="height: 8px;">
           <div class="progress-bar-fill" style="width: {{ progresso_meta }}%;"></div>

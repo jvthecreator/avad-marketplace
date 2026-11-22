@@ -51,5 +51,6 @@ class Product(models.Model):
     @property
     def parcelas_sem_juros(self):
         if self.preco >= 12:
-            return f"em até 12x de R$ {self.preco / 12:.2f} sem juros"
+            valor = f"{self.preco / 12:.2f}".replace('.', ',')
+            return f"em até 12x de R$ {valor} sem juros"
         return ""

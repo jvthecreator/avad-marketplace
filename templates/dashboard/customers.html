@@ -24,7 +24,7 @@
           <td><strong>{{ c.comprador__profile__nome|default:"Cliente" }}</strong></td>
           <td>{{ c.comprador__email }}</td>
           <td>{{ c.total_compras }} pedido(s)</td>
-          <td><strong style="color: #059669;">R$ {{ c.total_gasto }}</strong></td>
+          <td><strong style="color: #059669;">R$ {{ c.total_gasto|floatformat:"2g" }}</strong></td>
         </tr>
       {% empty %}
         <tr>

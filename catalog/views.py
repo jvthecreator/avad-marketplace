@@ -134,19 +134,19 @@ def calculate_frete_view(request):
     options = [
         {
             'method': 'PAC',
-            'price': f'R$ {base_pac:.2f}' if base_pac > 0 else 'Grátis',
+            'price': 'R$ ' + f'{base_pac:.2f}'.replace('.', ',') if base_pac > 0 else 'Grátis',
             'price_value': base_pac,
             'days': random.randint(7, 15),
         },
         {
             'method': 'SEDEX',
-            'price': f'R$ {base_sedex:.2f}',
+            'price': 'R$ ' + f'{base_sedex:.2f}'.replace('.', ','),
             'price_value': base_sedex,
             'days': random.randint(3, 7),
         },
         {
             'method': 'Transportadora AVAD Express',
-            'price': f'R$ {base_express:.2f}',
+            'price': 'R$ ' + f'{base_express:.2f}'.replace('.', ','),
             'price_value': base_express,
             'days': random.randint(1, 3),
         },
