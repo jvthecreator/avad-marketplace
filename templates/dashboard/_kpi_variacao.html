@@ -1,0 +1,20 @@
+{# Linha de comparação de um KPI. Parâmetros: pct (variação %, ou None) OU diff (diferença absoluta), unidade (opcional, p/ diff). Usa "comparacao" e "textos" do contexto. #}
+{% if comparacao is None %}
+  <div class="kpi-badge" style="color: var(--text-muted);">Todo o histórico da loja</div>
+{% elif diff is not None %}
+  {% if diff > 0 %}
+    <div class="kpi-badge positive">↑ +{{ diff }}{{ unidade }} {{ textos.comparacao }}</div>
+  {% elif diff < 0 %}
+    <div class="kpi-badge negative">↓ {{ diff }}{{ unidade }} {{ textos.comparacao }}</div>
+  {% else %}
+    <div class="kpi-badge" style="color: var(--text-muted);">= igual {{ textos.comparacao }}</div>
+  {% endif %}
+{% elif pct is None %}
+  <div class="kpi-badge" style="color: var(--text-muted);">Sem vendas no período anterior</div>
+{% elif pct > 0 %}
+  <div class="kpi-badge positive">↑ +{{ pct|floatformat:1 }}% {{ textos.comparacao }}</div>
+{% elif pct < 0 %}
+  <div class="kpi-badge negative">↓ {{ pct|floatformat:1 }}% {{ textos.comparacao }}</div>
+{% else %}
+  <div class="kpi-badge" style="color: var(--text-muted);">= 0% {{ textos.comparacao }}</div>
+{% endif %}

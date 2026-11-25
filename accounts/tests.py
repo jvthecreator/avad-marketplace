@@ -330,8 +330,10 @@ class AVaDMarketplaceUseCaseTests(TestCase):
     def test_pro012_seller_dashboard(self):
         self.entrar_como('felipe@lojadech.com', 'vendedor')
         res = self.client.get('/dashboard/')
-        self.assertContains(res, 'Vendas no ano')
+        self.assertContains(res, 'Vendas no mês')  # período padrão: mensal
         self.assertContains(res, 'Evolução das vendas')
+        res = self.client.get('/dashboard/?periodo=anual')
+        self.assertContains(res, 'Vendas no ano')
         self.assertContains(res, 'Mais vendidos')
         self.assertContains(res, 'Insights rápidos')
 

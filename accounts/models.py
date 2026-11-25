@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
+from decimal import Decimal
 import uuid
 
 
@@ -22,6 +23,9 @@ class UserProfile(models.Model):
         ('mediador', 'Mediador'),
     ], default='comprador')
     nome_loja = models.CharField(max_length=64, blank=True, null=True)
+    # Meta de faturamento bruto mensal do vendedor (exibida no painel). Editável em Configurações.
+    meta_mensal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('25000.00'),
+                                      validators=[MinValueValidator(Decimal('1.00'))])
 
     def __str__(self):
         return f"{self.nome} ({self.user.email})"

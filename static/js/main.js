@@ -162,75 +162,99 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 6. Canvas Sales Evolution Chart (PRO012 Dashboard)
   const canvas = document.getElementById('salesEvolutionChart');
-  if (canvas && window.chartLabels && window.chartCurrentYear && window.chartPrevYear) {
-    renderSalesChart(canvas, window.chartLabels, window.chartCurrentYear, window.chartPrevYear);
+  const chartDataEl = document.getElementById('sales-chart-data');
+  if (canvas && chartDataEl) {
+    const chartData = JSON.parse(chartDataEl.textContent);
+    const draw = () => renderSalesChart(canvas, chartData.labels, chartData.atual, chartData.anterior);
+    draw();
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(draw, 150); });
   }
 });
 
+// Gráfico de linhas do painel do vendedor.
+// currentData/prevData: arrays de números (null = sem ponto, ex.: dias que ainda não chegaram). prevData pode ser null.
 function renderSalesChart(canvas, labels, currentData, prevData) {
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth || 650;
+  const height = canvas.clientHeight || 250;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
   const ctx = canvas.getContext('2d');
-  const width = canvas.width;
-  const height = canvas.height;
-  const padding = 45;
-
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  const maxVal = Math.max(...currentData, ...prevData, 5000);
-  const chartHeight = height - padding * 2;
-  const chartWidth = width - padding * 2;
-  const stepX = chartWidth / (labels.length - 1);
+  const padLeft = 78, padRight = 20, padTop = 16, padBottom = 30;
+  const chartWidth = width - padLeft - padRight;
+  const chartHeight = height - padTop - padBottom;
+  const n = labels.length;
+  // Sem série de comparação (modo "desde o começo") o gráfico vira barras, uma por ano
+  const barMode = !prevData;
+  const band = chartWidth / Math.max(n, 1);
+  const xAt = (idx) => barMode ? padLeft + band * (idx + 0.5)
+    : (n > 1 ? padLeft + (chartWidth / (n - 1)) * idx : padLeft + chartWidth / 2);
 
-  // Background Grid Lines
-  ctx.strokeStyle = '#E5E7EB';
-  ctx.lineWidth = 1;
-  const gridRows = 4;
+  // Escala com intervalos "redondos" (1, 2, 2,5 ou 5 x potência de 10) a partir do maior valor real
+  const values = [...currentData, ...(prevData || [])].filter((v) => v !== null && v !== undefined);
+  const rawMax = Math.max(0, ...values);
+  const niceStep = (target) => {
+    const exp = Math.pow(10, Math.floor(Math.log10(target)));
+    const f = target / exp;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * exp;
+  };
+  const step = rawMax > 0 ? niceStep(rawMax / 4) : 25;
+  const gridRows = rawMax > 0 ? Math.max(1, Math.ceil(rawMax / step - 1e-9)) : 4;
+  const niceMax = step * gridRows;
+  const yAt = (val) => padTop + chartHeight - (val / niceMax) * chartHeight;
+  const decimals = Number.isInteger(step) ? 0 : 2;
+  const brl = (v) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+  // Linhas de grade + rótulos do eixo Y
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   for (let i = 0; i <= gridRows; i++) {
-    const y = padding + (chartHeight / gridRows) * i;
+    const val = step * (gridRows - i);
+    const y = yAt(val);
+    ctx.strokeStyle = '#E5E7EB';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(width - padding, y);
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(width - padRight, y);
     ctx.stroke();
-
-    // Labels
-    const val = maxVal - (maxVal / gridRows) * i;
     ctx.fillStyle = '#9CA3AF';
-    ctx.font = '10px -apple-system, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('R$ ' + Math.round(val), padding - 8, y + 3);
+    ctx.fillText(brl(val), padLeft - 10, y + 4);
   }
 
-  // X Labels
+  // Rótulos do eixo X (pula alguns quando há muitos, ex.: 31 dias / 24 horas)
+  const maxLabels = Math.max(2, Math.floor(chartWidth / 40));
+  const every = Math.ceil(n / maxLabels);
   ctx.textAlign = 'center';
+  ctx.fillStyle = '#9CA3AF';
   labels.forEach((lbl, idx) => {
-    const x = padding + stepX * idx;
-    ctx.fillText(lbl, x, height - padding + 18);
+    if (idx % every === 0 || idx === n - 1) ctx.fillText(lbl, xAt(idx), height - padBottom + 18);
   });
 
-  // Draw Line Function
   function drawLine(data, color, isDashed) {
-    ctx.beginPath();
+    if (!data) return;
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;
-    if (isDashed) {
-      ctx.setLineDash([4, 4]);
-    } else {
-      ctx.setLineDash([]);
-    }
-
+    ctx.setLineDash(isDashed ? [5, 5] : []);
+    ctx.beginPath();
+    let started = false;
     data.forEach((val, idx) => {
-      const x = padding + stepX * idx;
-      const y = padding + chartHeight - (val / maxVal) * chartHeight;
-      if (idx === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (val === null || val === undefined) { started = false; return; }
+      const x = xAt(idx), y = yAt(val);
+      if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
     });
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Draw Points
+    const radius = n > 20 ? 2.5 : 4;
     data.forEach((val, idx) => {
-      const x = padding + stepX * idx;
-      const y = padding + chartHeight - (val / maxVal) * chartHeight;
+      if (val === null || val === undefined) return;
       ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.arc(xAt(idx), yAt(val), radius, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
@@ -239,8 +263,20 @@ function renderSalesChart(canvas, labels, currentData, prevData) {
     });
   }
 
-  // Previous year (grey dashed)
-  drawLine(prevData, '#94A3B8', true);
-  // Current year (solid emerald)
-  drawLine(currentData, '#10B981', false);
+  if (barMode) {
+    const barWidth = Math.min(64, band * 0.6);
+    currentData.forEach((val, idx) => {
+      if (val === null || val === undefined) return;
+      const x = xAt(idx) - barWidth / 2, y = yAt(val);
+      ctx.fillStyle = '#10B981';
+      ctx.fillRect(x, y, barWidth, padTop + chartHeight - y);
+      ctx.fillStyle = '#374151';
+      ctx.textAlign = 'center';
+      ctx.fillText('R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), xAt(idx), y - 6);
+    });
+    return;
+  }
+
+  drawLine(prevData, '#94A3B8', true);      // período anterior (cinza tracejado)
+  drawLine(currentData, '#10B981', false);  // período atual (verde)
 }

@@ -9,6 +9,25 @@
 </div>
 
 <div style="max-width: 600px;">
+  <!-- META MENSAL (editável) -->
+  <div class="card" id="meta" style="margin-bottom: 24px;">
+    <h3 class="card-title" style="margin-bottom: 4px;">Meta mensal de vendas</h3>
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+      Valor de faturamento bruto que você quer atingir por mês. O progresso aparece na Visão Geral do painel.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="{{ meta_form.meta_mensal.id_for_label }}">{{ meta_form.meta_mensal.label }}:</label>
+        {{ meta_form.meta_mensal }}
+        {% if meta_form.meta_mensal.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ meta_form.meta_mensal.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary">Salvar meta</button>
+    </form>
+  </div>
+
   <div class="card">
     <div class="form-group">
       <label class="form-label">Nome da Loja:</label>

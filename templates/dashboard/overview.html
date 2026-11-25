@@ -12,52 +12,61 @@
   </div>
 
   <div style="display: flex; align-items: center; gap: 12px;">
-    <select class="form-select" style="width: auto; padding: 8px 14px; font-size: 13px;">
-      <option value="ano_atual">Ano de 2026</option>
-      <option value="mes_atual">Este Mês</option>
-      <option value="ultimos_30">Últimos 30 dias</option>
-    </select>
+    <form method="get" style="margin: 0;">
+      <select name="periodo" class="form-select" style="width: auto; padding: 8px 14px; font-size: 13px;" onchange="this.form.submit()" aria-label="Período das estatísticas">
+        {% for valor, nome in periodos %}
+          <option value="{{ valor }}" {% if valor == periodo %}selected{% endif %}>{{ nome }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit" class="btn btn-outline btn-sm">Aplicar</button></noscript>
+    </form>
     <a href="{% url 'catalog:product_create' %}" class="btn btn-success">+ Nova oferta</a>
   </div>
 </div>
 
-<!-- 5 CARDS DE KPIS COMPARATIVOS -->
+<!-- 5 CARDS DE KPIS (seguem o período escolhido no seletor) -->
+{% with c=comparacao %}
 <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
-  <!-- VENDAS NO ANO -->
   <div class="kpi-card">
-    <div class="kpi-title">Vendas no ano</div>
-    <div class="kpi-val">R$ {{ vendas_ano|floatformat:"2g" }}</div>
-    <div class="kpi-badge positive">↑ +18,4% vs ano anterior</div>
+    <div class="kpi-title">{{ textos.vendas }}</div>
+    <div class="kpi-val">R$ {{ kpi.bruto|floatformat:"2g" }}</div>
+    {% include "dashboard/_kpi_variacao.html" with pct=c.bruto diff=None %}
   </div>
 
-  <!-- VENDAS NO MÊS -->
-  <div class="kpi-card">
-    <div class="kpi-title">Vendas no mês</div>
-    <div class="kpi-val">R$ {{ vendas_mes|floatformat:"2g" }}</div>
-    <div class="kpi-badge positive">↑ +12,1% vs mês anterior</div>
-  </div>
-
-  <!-- VENDAS NA SEMANA -->
-  <div class="kpi-card">
-    <div class="kpi-title">Vendas na semana</div>
-    <div class="kpi-val">R$ {{ vendas_semana|floatformat:"2g" }}</div>
-    <div class="kpi-badge positive">↑ +5,8% vs semana anterior</div>
-  </div>
-
-  <!-- RECEITA LÍQUIDA -->
   <div class="kpi-card">
     <div class="kpi-title">Receita líquida</div>
-    <div class="kpi-val" style="color: #059669;">R$ {{ receita_liquida|floatformat:"2g" }}</div>
-    <div class="kpi-badge positive">Taxa de split: 93,5%</div>
+    <div class="kpi-val" style="color: #059669;">R$ {{ kpi.liquido|floatformat:"2g" }}</div>
+    {% if kpi.pct_liquido is not None %}
+      <div class="kpi-badge" style="color: var(--text-muted);">{{ kpi.pct_liquido|floatformat:1 }}% do valor vendido, após o split</div>
+    {% else %}
+      <div class="kpi-badge" style="color: var(--text-muted);">Sem vendas no período</div>
+    {% endif %}
   </div>
 
-  <!-- PEDIDOS -->
   <div class="kpi-card">
     <div class="kpi-title">Pedidos</div>
-    <div class="kpi-val">{{ total_pedidos }}</div>
-    <div class="kpi-badge positive">↑ +8 novos pedidos</div>
+    <div class="kpi-val">{{ kpi.pedidos }}</div>
+    {% include "dashboard/_kpi_variacao.html" with diff=c.pedidos_diff pct=None %}
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Unidades vendidas</div>
+    <div class="kpi-val">{{ kpi.unidades }}</div>
+    {% include "dashboard/_kpi_variacao.html" with diff=c.unidades_diff pct=None %}
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Ticket médio</div>
+    <div class="kpi-val">R$ {{ kpi.ticket_medio|floatformat:"2g" }}</div>
+    {% include "dashboard/_kpi_variacao.html" with pct=c.ticket_medio diff=None %}
   </div>
 </div>
+{% endwith %}
+{% if comparacao is not None %}
+  <div style="font-size: 11px; color: var(--text-muted); margin: -14px 0 24px;">
+    Período: <strong>{{ periodo_label }}</strong>. As comparações usam o mesmo trecho do período anterior até este momento. A semana vai de domingo a sábado.
+  </div>
+{% endif %}
 
 <!-- GRÁFICO DE EVOLUÇÃO E AVALIAÇÕES -->
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
@@ -66,20 +75,22 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">Evolução das vendas</h3>
-        <div style="font-size: 12px; color: var(--text-muted);">Receita bruta mensal: Ano Atual (verde) vs Ano Anterior (cinza tracejado)</div>
+        <div style="font-size: 12px; color: var(--text-muted);">{{ grafico.subtitulo }}</div>
       </div>
       <div style="display: flex; gap: 12px; font-size: 12px;">
         <span style="display: flex; align-items: center; gap: 4px;">
-          <span style="width: 12px; height: 3px; background: #10B981; display: inline-block;"></span> 2026
+          <span style="width: 12px; height: 3px; background: #10B981; display: inline-block;"></span> {{ grafico.legenda_atual }}
         </span>
+        {% if grafico.legenda_anterior %}
         <span style="display: flex; align-items: center; gap: 4px;">
-          <span style="width: 12px; height: 3px; background: #94A3B8; display: inline-block;"></span> 2025
+          <span style="width: 12px; height: 0; border-top: 2px dashed #94A3B8; display: inline-block;"></span> {{ grafico.legenda_anterior }}
         </span>
+        {% endif %}
       </div>
     </div>
 
     <div style="width: 100%; height: 260px; position: relative;">
-      <canvas id="salesEvolutionChart" width="650" height="250" style="width: 100%; height: 100%;"></canvas>
+      <canvas id="salesEvolutionChart" style="width: 100%; height: 100%; display: block;"></canvas>
     </div>
   </div>
 
@@ -136,7 +147,7 @@
   <!-- CARD MAIS VENDIDOS -->
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Mais vendidos (últimos 30 dias)</h3>
+      <h3 class="card-title">Mais vendidos ({{ periodo_label|lower }})</h3>
       <span style="font-size: 12px; color: var(--text-muted);">Top 5</span>
     </div>
 
@@ -159,7 +170,7 @@
       </div>
     {% else %}
       <div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 24px;">
-        Nenhuma venda registrada nos últimos 30 dias.
+        Nenhuma venda registrada neste período.
       </div>
     {% endif %}
   </div>
@@ -168,38 +179,42 @@
   <div class="card">
     <div class="card-header">
       <h3 class="card-title">Insights rápidos</h3>
-      <span class="badge badge-info">IA & Inteligência</span>
+      
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 14px;">
       <div style="display: flex; justify-content: space-between; font-size: 13px;">
-        <span style="color: var(--text-muted);">Melhor dia de vendas:</span>
-        <strong>Quinta-feira (+34% em conversões)</strong>
+        <span style="color: var(--text-muted);">{{ melhor_momento.rotulo|default:"Melhor dia de vendas" }} ({{ periodo_label|lower }}):</span>
+        <strong>{{ melhor_momento.valor|default:"—" }}</strong>
       </div>
 
       <div style="display: flex; justify-content: space-between; font-size: 13px;">
-        <span style="color: var(--text-muted);">Taxa de conversão do catálogo:</span>
-        <strong style="color: #10B981;">4,8% (Acima da média)</strong>
+        <span style="color: var(--text-muted);">Pedidos aguardando sua confirmação:</span>
+        {% if pedidos_aguardando %}
+          <a href="{% url 'orders:seller_orders' %}" style="font-weight: 700; color: #D97706;">{{ pedidos_aguardando }} pedido{{ pedidos_aguardando|pluralize }} &rarr;</a>
+        {% else %}
+          <strong style="color: #10B981;">Nenhum</strong>
+        {% endif %}
       </div>
 
       <!-- ALERTA DE ESTOQUE BAIXO -->
       {% if produtos_baixo_estoque %}
         <div style="background: #FEF2F2; border: 1px solid #FCA5A5; padding: 10px 14px; border-radius: var(--radius-md); font-size: 12px; color: #991B1B;">
-          ⚠️ <strong>Estoque baixo:</strong> {{ produtos_baixo_estoque.count }} anúncio(s) com menos de 5 unidades.
+          ⚠️ <strong>Estoque baixo:</strong> {{ produtos_baixo_estoque.count }} anúncio(s) com 5 unidades ou menos.
         </div>
       {% endif %}
 
       <!-- CARD ESCURO DE META MENSAL -->
       <div style="background: #142621; color: #FFFFFF; padding: 16px; border-radius: var(--radius-md); margin-top: 4px;">
         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
-          <span>Meta mensal de vendas</span>
-          <strong>R$ {{ vendas_mes|floatformat:"2g" }} / R$ 25.000,00</strong>
+          <span>Meta mensal de vendas &middot; <a href="{% url 'dashboard:settings' %}#meta" style="color: #6EE7B7; text-decoration: underline;">alterar</a></span>
+          <strong>R$ {{ vendas_mes|floatformat:"2g" }} / R$ {{ meta_mensal|floatformat:"2g" }}</strong>
         </div>
         <div class="progress-bar-bg" style="height: 8px;">
           <div class="progress-bar-fill" style="width: {{ progresso_meta }}%;"></div>
         </div>
         <div style="font-size: 11px; color: #94A3B8; margin-top: 6px; text-align: right;">
-          {{ progresso_meta }}% da meta atingida
+          {{ pct_meta|floatformat:1 }}% da meta atingida{% if pct_meta >= 100 %} 🎉{% endif %}
         </div>
       </div>
     </div>
@@ -255,9 +270,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  window.chartLabels = {{ meses_labels|safe }};
-  window.chartCurrentYear = {{ ano_atual_dados|safe }};
-  window.chartPrevYear = {{ ano_anterior_dados|safe }};
-</script>
+{{ grafico|json_script:"sales-chart-data" }}
 {% endblock %}
