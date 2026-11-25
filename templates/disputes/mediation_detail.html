@@ -135,7 +135,8 @@
 
       <div style="padding: 20px;">
         <!-- TAB MENSAGENS -->
-        <div id="tab-mensagens" class="mediation-tab-pane" style="display: block;">
+        <!-- Chat ao vivo (React): substitui a lista e o formulário de mensagem do mediador -->
+        <div id="tab-mensagens" class="mediation-tab-pane" style="display: block;" data-react="chat-disputa" data-disputa="{{ dispute.id }}" data-react-remove=".mediador-form-servidor">
           <div style="display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 8px;">
             {% for msg in messages_list %}
               <div style="padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: {% if msg.papel == 'mediador' %}#EFF6FF{% elif msg.papel == 'vendedor' %}#F0FDF4{% else %}#FFFFFF{% endif %};">
@@ -226,7 +227,7 @@
 
       <!-- CAMPO DE RESPOSTA ÀS PARTES (MENSAGEM DO MEDIADOR) -->
       {% if dispute.status == 'em_analise' %}
-        <form method="post" enctype="multipart/form-data" style="border-top: 1px solid var(--border-color); padding: 16px 20px; background: #F9FAFB;">
+        <form method="post" enctype="multipart/form-data" class="mediador-form-servidor" style="border-top: 1px solid var(--border-color); padding: 16px 20px; background: #F9FAFB;">
           {% csrf_token %}
           <input type="hidden" name="action_type" value="message">
 

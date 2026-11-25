@@ -36,7 +36,8 @@
 <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px;">
   <!-- TIMELINE DE MENSAGENS E MANIFESTAÇÕES -->
   <div>
-    <div class="card" style="margin-bottom: 24px;">
+    <!-- Chat: o React troca este card e mostra as mensagens novas sem recarregar -->
+    <div class="card" style="margin-bottom: 24px;" data-react="chat-disputa" data-disputa="{{ dispute.id }}">
       <h3 class="card-title" style="margin-bottom: 16px;">Histórico de Mensagens e Manifestações</h3>
 
       <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">

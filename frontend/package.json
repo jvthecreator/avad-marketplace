@@ -1,0 +1,17 @@
+{
+  "name": "avad-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Componentes React do AVaD. O resultado compilado vai para static/js/avad-react.js.",
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --minify --format=iife --jsx=automatic --target=es2019 --define:process.env.NODE_ENV=\\\"production\\\" --outfile=../static/js/avad-react.js",
+    "watch": "esbuild src/main.jsx --bundle --format=iife --jsx=automatic --target=es2019 --define:process.env.NODE_ENV=\\\"development\\\" --outfile=../static/js/avad-react.js --watch"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}

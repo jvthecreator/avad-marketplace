@@ -8,6 +8,8 @@
   <p style="font-size: 13px; color: var(--text-muted);">Altere quantidades, remova itens ou finalize a compra de cada produto</p>
 </div>
 
+<!-- Carrinho: o React troca este bloco e altera quantidades sem recarregar a página -->
+<div data-react="carrinho">
 {% if items %}
 <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
 
@@ -91,4 +93,5 @@
     <a href="{% url 'catalog:product_list' %}" class="btn btn-primary">Ver catálogo</a>
   </div>
 {% endif %}
+</div>
 {% endblock %}

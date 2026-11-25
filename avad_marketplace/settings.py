@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'disputes',
     'dashboard',
     'notifications',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -60,12 +61,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'avad_marketplace.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+def _banco_a_partir_da_url(url):
+    """Converte uma URL do Postgres (ex.: a "connection string" do Neon) na configuração do Django.
+    Formato: postgresql://usuario:senha@host:porta/banco?sslmode=require"""
+    from urllib.parse import urlsplit, unquote, parse_qsl
+    partes = urlsplit(url)
+    if partes.scheme not in ('postgres', 'postgresql'):
+        raise ValueError('DATABASE_URL precisa começar com postgresql:// ou postgres://')
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': unquote(partes.path.lstrip('/')),
+        'USER': unquote(partes.username or ''),
+        'PASSWORD': unquote(partes.password or ''),
+        'HOST': partes.hostname or '',
+        'PORT': str(partes.port or ''),
+        'OPTIONS': dict(parse_qsl(partes.query)),  # ex.: sslmode=require, channel_binding=require
+        'CONN_MAX_AGE': 60,          # reaproveita a conexão por até 60 s
+        'CONN_HEALTH_CHECKS': True,  # reconecta se o banco tiver "dormido" (o Neon pausa quando fica ocioso)
     }
-}
+
+
+# Com a variável DATABASE_URL definida (no Render), usa o Postgres externo, que não é apagado quando o
+# site reinicia. Sem ela (no seu computador), continua usando o SQLite local.
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {'default': _banco_a_partir_da_url(os.environ['DATABASE_URL'])}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 CSRF_TRUSTED_ORIGINS = [

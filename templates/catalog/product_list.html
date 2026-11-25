@@ -12,6 +12,8 @@
   {% if q %} &rsaquo; Resultados para "<em>{{ q }}</em>"{% endif %}
 </div>
 
+<!-- Busca ao vivo: o React troca este bloco e passa a buscar na API enquanto a pessoa digita -->
+<div data-react="catalogo">
 <div style="display: grid; grid-template-columns: 240px 1fr; gap: 24px;">
   <!-- BARRA LATERAL DE FILTROS -->
   <aside>
@@ -149,5 +151,6 @@
       </div>
     {% endif %}
   </div>
+</div>
 </div>
 {% endblock %}

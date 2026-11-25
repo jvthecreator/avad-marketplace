@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}AVaD — Assurance, Value and Dealing{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   {% block extra_head %}{% endblock %}
@@ -36,9 +37,12 @@
           {% elif request.tipo_usuario == 'mediador' %}
             <a href="{% url 'disputes:mediation_panel' %}" class="nav-link" style="color: #2563EB; font-weight: 600;">Painel de Mediação</a>
           {% endif %}
-          <a href="{% url 'notifications:list' %}" class="nav-link cart-link" title="Notificações" aria-label="Notificações">
-            🔔{% if notif_count %}<span class="cart-badge notif-badge">{% if notif_count > 9 %}9+{% else %}{{ notif_count }}{% endif %}</span>{% endif %}
-          </a>
+          <!-- Sininho: o React troca este link por um menu que se atualiza sozinho -->
+          <div data-react="notificacoes" class="notif-bell">
+            <a href="{% url 'notifications:list' %}" class="nav-link cart-link" title="Notificações" aria-label="Notificações">
+              🔔{% if notif_count %}<span class="cart-badge notif-badge">{% if notif_count > 9 %}9+{% else %}{{ notif_count }}{% endif %}</span>{% endif %}
+            </a>
+          </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 13px; font-weight: 600;">{{ user.profile.nome|default:user.username }}</span>
             <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); background: #F3F4F6; padding: 2px 8px; border-radius: 999px;">{{ request.tipo_usuario|capfirst }}</span>
@@ -85,6 +89,8 @@
   </footer>
 
   <script src="{% static 'js/main.js' %}"></script>
+  <!-- Componentes React (código-fonte em frontend/, compilado com "npm run build") -->
+  <script src="{% static 'js/avad-react.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

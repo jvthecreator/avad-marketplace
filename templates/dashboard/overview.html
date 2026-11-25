@@ -12,6 +12,7 @@
   </div>
 
   <div style="display: flex; align-items: center; gap: 12px;">
+    <div id="dash-periodo">
     <form method="get" style="margin: 0;">
       <select name="periodo" class="form-select" style="width: auto; padding: 8px 14px; font-size: 13px;" onchange="this.form.submit()" aria-label="Período das estatísticas">
         {% for valor, nome in periodos %}
@@ -20,11 +21,16 @@
       </select>
       <noscript><button type="submit" class="btn btn-outline btn-sm">Aplicar</button></noscript>
     </form>
+    </div>
     <a href="{% url 'catalog:product_create' %}" class="btn btn-success">+ Nova oferta</a>
   </div>
 </div>
 
+<!-- Ponto de entrada do React no painel: ele redesenha as áreas com id "dash-..." ao trocar o período -->
+<div data-react="painel-vendedor" data-periodo="{{ periodo }}" hidden></div>
+
 <!-- 5 CARDS DE KPIS (seguem o período escolhido no seletor) -->
+<div id="dash-kpis">
 {% with c=comparacao %}
 <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
   <div class="kpi-card">
@@ -67,11 +73,12 @@
     Período: <strong>{{ periodo_label }}</strong>. As comparações usam o mesmo trecho do período anterior até este momento. A semana vai de domingo a sábado.
   </div>
 {% endif %}
+</div>
 
 <!-- GRÁFICO DE EVOLUÇÃO E AVALIAÇÕES -->
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
   <!-- GRÁFICO INTERATIVO DE LINHA -->
-  <div class="card">
+  <div class="card" id="dash-grafico">
     <div class="card-header">
       <div>
         <h3 class="card-title">Evolução das vendas</h3>
@@ -145,7 +152,7 @@
 <!-- SEÇÃO: MAIS VENDIDOS E INSIGHTS RÁPIDOS -->
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
   <!-- CARD MAIS VENDIDOS -->
-  <div class="card">
+  <div class="card" id="dash-mais-vendidos">
     <div class="card-header">
       <h3 class="card-title">Mais vendidos ({{ periodo_label|lower }})</h3>
       <span style="font-size: 12px; color: var(--text-muted);">Top 5</span>
@@ -183,7 +190,7 @@
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 14px;">
-      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+      <div id="dash-melhor-momento" style="display: flex; justify-content: space-between; font-size: 13px;">
         <span style="color: var(--text-muted);">{{ melhor_momento.rotulo|default:"Melhor dia de vendas" }} ({{ periodo_label|lower }}):</span>
         <strong>{{ melhor_momento.valor|default:"—" }}</strong>
       </div>

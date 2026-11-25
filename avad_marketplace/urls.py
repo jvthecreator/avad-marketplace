@@ -14,6 +14,7 @@ urlpatterns = [
     path('disputes/', include('disputes.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('notifications/', include('notifications.urls')),
+    path('api/', include('api.urls')),
 ]
 
 if settings.DEBUG:
