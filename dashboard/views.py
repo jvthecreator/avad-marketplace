@@ -16,6 +16,21 @@ import json
 
 
 
+class NomeLojaForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['nome_loja']
+        labels = {'nome_loja': 'Nome da loja'}
+        widgets = {'nome_loja': forms.TextInput(attrs={'class': 'form-input', 'maxlength': '64',
+                                                       'placeholder': 'Ex.: Tech Store Oficial'})}
+        help_texts = {'nome_loja': 'Nome que os compradores veem nos seus anúncios e no seu perfil. '
+                                   'Se ficar em branco, aparece o seu nome pessoal.'}
+
+    def clean_nome_loja(self):
+        nome = (self.cleaned_data.get('nome_loja') or '').strip()
+        return nome or None  # vazio = usa o nome pessoal
+
+
 class MetaMensalForm(forms.ModelForm):
     class Meta:
         model = UserProfile
@@ -101,9 +116,20 @@ def customers_view(request):
 @login_required
 def settings_view(request):
     profile = getattr(request.user, 'profile', None)
-    meta_form = MetaMensalForm(request.POST or None, instance=profile)
-    if request.method == 'POST' and profile is not None and meta_form.is_valid():
+    # Cada card da página tem seu próprio formulário; o botão enviado diz qual deles salvar
+    enviado = request.POST.get('form') if request.method == 'POST' else None
+    loja_form = NomeLojaForm(request.POST if enviado == 'loja' else None, instance=profile)
+    meta_form = MetaMensalForm(request.POST if enviado == 'meta' else None, instance=profile)
+
+    if profile is not None and enviado == 'loja' and loja_form.is_valid():
+        loja_form.save()
+        messages.success(request, 'Nome da loja atualizado com sucesso.')
+        return redirect('dashboard:settings')
+    if profile is not None and enviado == 'meta' and meta_form.is_valid():
         meta_form.save()
         messages.success(request, 'Meta mensal atualizada com sucesso.')
         return redirect('dashboard:settings')
-    return render(request, 'dashboard/settings.html', {'profile': profile, 'meta_form': meta_form})
+
+    return render(request, 'dashboard/settings.html', {
+        'profile': profile, 'loja_form': loja_form, 'meta_form': meta_form,
+    })

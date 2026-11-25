@@ -20,8 +20,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             nome='Marina',
             data_nascimento=datetime.date(1995, 5, 14),
             cpf='123.456.789-01',
-            email_verificado=True,
-            tipo_usuario='comprador'
+            email_verificado=True
         )
 
         # Create seller
@@ -34,8 +33,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             cpf='987.654.321-00',
             cnpj='12.345.678/0001-90',
             tem_cnpj=True,
-            email_verificado=True,
-            tipo_usuario='vendedor'
+            email_verificado=True
         )
 
         # Create mediator
@@ -46,8 +44,7 @@ class AVaDMarketplaceUseCaseTests(TestCase):
             data_nascimento=datetime.date(1985, 7, 8),
             cpf='111.222.333-44',
             email_verificado=True,
-            is_mediador=True,
-            tipo_usuario='mediador'
+            is_mediador=True
         )
 
         # Create product

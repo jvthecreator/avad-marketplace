@@ -17,12 +17,14 @@ class UserProfile(models.Model):
     conta_bancaria_bloqueada = models.BooleanField(default=False)
     suspenso = models.BooleanField(default=False)
     token_verificacao = models.CharField(max_length=64, blank=True, null=True)
-    tipo_usuario = models.CharField(max_length=20, choices=[
-        ('comprador', 'Comprador'),
-        ('vendedor', 'Vendedor'),
-        ('mediador', 'Mediador'),
-    ], default='comprador')
-    nome_loja = models.CharField(max_length=64, blank=True, null=True)
+    # Qualquer usuário pode comprar e vender: o papel (comprador/vendedor/mediador) é escolhido no login
+    # e fica na sessão (ver accounts/roles.py). Só "is_mediador" restringe quem pode entrar como mediador.
+    nome_loja = models.CharField(max_length=64, blank=True, null=True)  # nome público como vendedor
+
+    @property
+    def nome_vendedor(self):
+        """Nome mostrado como vendedor: o nome da loja, ou o nome pessoal se não houver loja."""
+        return self.nome_loja or self.nome
     # Meta de faturamento bruto mensal do vendedor (exibida no painel). Editável em Configurações.
     meta_mensal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('25000.00'),
                                       validators=[MinValueValidator(Decimal('1.00'))])

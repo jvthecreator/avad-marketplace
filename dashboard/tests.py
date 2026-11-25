@@ -26,7 +26,7 @@ class PainelVendedorTests(TestCase):
     def setUp(self):
         self.seller = User.objects.create_user(username='v@avad.com', password='senha1234')
         UserProfile.objects.create(user=self.seller, nome='Vend', data_nascimento=datetime.date(1990, 1, 1),
-                                   cpf='000.000.000-00', email_verificado=True, tipo_usuario='vendedor')
+                                   cpf='000.000.000-00', email_verificado=True)
         self.buyer = User.objects.create_user(username='c@avad.com', password='senha1234')
         self.product = Product.objects.create(vendedor=self.seller, titulo='Caneca', categoria='outros',
                                               descricao='x', preco=Decimal('10.00'), estoque=50)
@@ -123,3 +123,50 @@ class PainelVendedorTests(TestCase):
             res = self.client.get('/dashboard/?periodo=semanal')
         self.assertContains(res, 'R$ 20,00')
         self.assertContains(res, 'selected>Semanal')
+
+
+class ConfiguracoesLojaTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='x@avad.com', password='senha1234')
+        self.profile = UserProfile.objects.create(user=self.user, nome='Joao', data_nascimento=datetime.date(1990, 1, 1),
+                                                  cpf='111.111.111-11', email_verificado=True)
+        self.client.login(username='x@avad.com', password='senha1234')
+        s = self.client.session
+        s['tipo_usuario'] = 'vendedor'
+        s.save()
+
+    def test_alterar_nome_da_loja_e_meta_separadamente(self):
+        res = self.client.post('/dashboard/settings/', {'form': 'loja', 'nome_loja': '  Casa & Cia  '})
+        self.assertEqual(res.status_code, 302)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.nome_loja, 'Casa & Cia')
+        self.assertEqual(self.profile.nome_vendedor, 'Casa & Cia')
+        self.assertEqual(self.profile.meta_mensal, Decimal('25000.00'))  # meta intacta
+
+        res = self.client.post('/dashboard/settings/', {'form': 'meta', 'meta_mensal': '800'})
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.meta_mensal, Decimal('800'))
+        self.assertEqual(self.profile.nome_loja, 'Casa & Cia')  # nome intacto
+
+        # em branco volta a usar o nome pessoal
+        self.client.post('/dashboard/settings/', {'form': 'loja', 'nome_loja': '   '})
+        self.profile.refresh_from_db()
+        self.assertIsNone(self.profile.nome_loja)
+        self.assertEqual(self.profile.nome_vendedor, 'Joao')
+
+        res = self.client.get(f'/accounts/seller-profile/{self.user.id}/')
+        self.assertContains(res, 'Joao')
+
+    def test_usuario_sem_tipo_fixo_entra_como_comprador_ou_vendedor_mas_nao_mediador(self):
+        self.client.logout()
+        self.user.email = 'x@avad.com'
+        self.user.save()
+        for tipo in ['comprador', 'vendedor']:
+            self.client.logout()
+            res = self.client.post('/accounts/login/', {'email': 'x@avad.com', 'senha': 'senha1234', 'tipo_usuario': tipo})
+            self.assertEqual(res.status_code, 302)
+            self.assertEqual(self.client.session['tipo_usuario'], tipo)
+        self.client.logout()
+        res = self.client.post('/accounts/login/', {'email': 'x@avad.com', 'senha': 'senha1234', 'tipo_usuario': 'mediador'})
+        self.assertEqual(res.status_code, 200)
+        self.assertNotIn('tipo_usuario', self.client.session)

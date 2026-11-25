@@ -47,7 +47,6 @@ class Command(BaseCommand):
                 'tem_cnpj': False,
                 'email_verificado': True,
                 'is_mediador': False,
-                'tipo_usuario': 'comprador',
             }
         )
 
@@ -82,7 +81,6 @@ class Command(BaseCommand):
                 'email_verificado': True,
                 'is_mediador': False,
                 'conta_bancaria_bloqueada': False,
-                'tipo_usuario': 'vendedor',
             }
         )
 
@@ -97,7 +95,7 @@ class Command(BaseCommand):
             user=user_vendedor2,
             defaults={
                 'nome': 'Carlos Eduardo',
-                'nome_loja': 'Casa &amp; Conforto Mobiliário',
+                'nome_loja': 'Casa & Conforto Mobiliário',
                 'data_nascimento': datetime.date(1988, 3, 15),
                 'cpf': '555.444.333-22',
                 'cnpj': '99.888.777/0001-11',
@@ -105,7 +103,6 @@ class Command(BaseCommand):
                 'email_verificado': True,
                 'is_mediador': False,
                 'conta_bancaria_bloqueada': True,  # Reter repasses em Escrow
-                'tipo_usuario': 'vendedor',
             }
         )
 
@@ -126,7 +123,6 @@ class Command(BaseCommand):
                 'tem_cnpj': False,
                 'email_verificado': True,
                 'is_mediador': True,
-                'tipo_usuario': 'mediador',
             }
         )
 

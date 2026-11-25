@@ -17,6 +17,7 @@
     </p>
     <form method="post">
       {% csrf_token %}
+      <input type="hidden" name="form" value="meta">
       <div class="form-group">
         <label class="form-label" for="{{ meta_form.meta_mensal.id_for_label }}">{{ meta_form.meta_mensal.label }}:</label>
         {{ meta_form.meta_mensal }}
@@ -29,9 +30,23 @@
   </div>
 
   <div class="card">
+    <form method="post" id="loja" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="loja">
+      <div class="form-group">
+        <label class="form-label" for="{{ loja_form.nome_loja.id_for_label }}">{{ loja_form.nome_loja.label }}:</label>
+        {{ loja_form.nome_loja }}
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">{{ loja_form.nome_loja.help_text }}</div>
+        {% if loja_form.nome_loja.errors %}
+          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ loja_form.nome_loja.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary">Salvar nome da loja</button>
+    </form>
+
     <div class="form-group">
-      <label class="form-label">Nome da Loja:</label>
-      <input type="text" class="form-input" value="{{ profile.nome_loja|default:profile.nome }}" readonly>
+      <label class="form-label">Nome pessoal:</label>
+      <input type="text" class="form-input" value="{{ profile.nome }}" readonly>
     </div>
 
     <div class="form-group">
