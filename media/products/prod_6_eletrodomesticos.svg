@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450" viewBox="0 0 600 450">
-  <rect width="600" height="450" fill="#78350F"/>
-  <circle cx="300" cy="180" r="70" fill="rgba(255,255,255,0.08)"/>
-  <text x="300" y="195" font-family="system-ui, -apple-system, sans-serif" font-size="48" fill="#FFFFFF" text-anchor="middle" font-weight="bold">AVaD</text>
-  <text x="300" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#FFFFFF" text-anchor="middle" font-weight="600">Cafeteira Espresso Autom</text>
-  <text x="300" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="rgba(255,255,255,0.6)" text-anchor="middle">Assurance, Value and Dealing &#8226; Produto Verificado</text>
-</svg>
