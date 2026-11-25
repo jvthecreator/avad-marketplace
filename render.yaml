@@ -2,10 +2,15 @@ services:
   - type: web
     name: avad-marketplace
     env: python
-    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py seed_data"
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py seed_data && python manage.py criar_admin"
     startCommand: "gunicorn avad_marketplace.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
       - key: DEBUG
         value: "True"
+      # Conta de admin (/admin/): defina os valores no painel do Render, nunca no repositório
+      - key: DJANGO_ADMIN_EMAIL
+        sync: false
+      - key: DJANGO_ADMIN_PASSWORD
+        sync: false
