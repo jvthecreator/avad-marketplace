@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from orders.models import Order, Review
+from orders.services import estatisticas_vendedor
 from catalog.models import Product
 from finance.models import PaymentSplit
 import datetime
@@ -94,6 +95,7 @@ def overview_view(request):
         'meta_mensal': meta_mensal,
         'progresso_meta': progresso_meta,
         'pedidos_recentes': pedidos_recentes,
+        'stats': estatisticas_vendedor(user),
     })
 
 

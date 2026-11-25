@@ -51,6 +51,19 @@ class Product(models.Model):
         return Review.objects.filter(pedido__produto=self).count()
 
     @property
+    def total_vendidos(self):
+        """Unidades vendidas deste produto até agora (pedidos pagos e não cancelados/estornados)."""
+        from orders.models import Order
+        from orders.services import STATUS_NAO_CONTAM_COMO_VENDA
+        from django.db.models import Sum
+        total = (
+            Order.objects.filter(produto=self)
+            .exclude(status__in=STATUS_NAO_CONTAM_COMO_VENDA)
+            .aggregate(s=Sum('quantidade'))['s']
+        )
+        return total or 0
+
+    @property
     def parcelas_sem_juros(self):
         if self.preco >= 12:
             valor = f"{self.preco / 12:.2f}".replace('.', ',')

@@ -6,6 +6,7 @@ from .forms import RegisterForm, LoginForm, PasswordChangeForm
 from .models import UserProfile
 from .roles import tipo_usuario, pagina_inicial
 from orders.models import Review
+from orders.services import estatisticas_vendedor
 from django.db.models import Avg, Count, Q
 import uuid
 
@@ -232,6 +233,7 @@ def seller_profile_view(request, user_id):
 
     return render(request, 'accounts/seller_profile.html', {
         'seller': seller,
+        'stats': estatisticas_vendedor(seller),
         'profile': profile,
         'reviews': reviews,
         'products': products,

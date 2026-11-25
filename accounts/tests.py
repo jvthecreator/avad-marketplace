@@ -335,6 +335,62 @@ class AVaDMarketplaceUseCaseTests(TestCase):
         self.assertContains(res, 'Mais vendidos')
         self.assertContains(res, 'Insights rápidos')
 
+    def _criar_pedido(self, status, quantidade=1):
+        return Order.objects.create(
+            comprador=self.buyer, vendedor=self.seller, produto=self.product,
+            quantidade=quantidade, preco_unitario=self.product.preco,
+            valor_total=self.product.preco * quantidade, status=status,
+        )
+
+    def _criar_disputa(self, pedido, status):
+        return Dispute.objects.create(
+            codigo=f'#DSP-{pedido.pk}', pedido=pedido, comprador=self.buyer, vendedor=self.seller,
+            motivo='Produto com defeito', descricao='Teste', status=status,
+        )
+
+    def test_reputacao_vendedor_vendas_e_disputas(self):
+        from orders.services import estatisticas_vendedor
+        p1 = self._criar_pedido('entregue', quantidade=2)
+        p2 = self._criar_pedido('a_caminho')
+        p3 = self._criar_pedido('preparando')
+        self._criar_pedido('cancelado', quantidade=5)            # não conta
+        self._criar_pedido('aguardando_pagamento', quantidade=4)  # não conta
+
+        self._criar_disputa(p1, 'decidida_vendedor')
+        self._criar_disputa(p2, 'decidida_vendedor')
+        self._criar_disputa(p3, 'decidida_comprador')
+        p4 = self._criar_pedido('entregue')
+        self._criar_disputa(p4, 'em_analise')
+
+        stats = estatisticas_vendedor(self.seller)
+        self.assertEqual(stats['total_vendas'], 4)
+        self.assertEqual(stats['total_disputas'], 4)
+        self.assertEqual(stats['disputas_em_analise'], 1)
+        self.assertEqual(stats['pct_disputas_vencidas'], 67)  # 2 de 3 decididas
+
+        # Unidades vendidas do produto: 2 + 1 + 1 + 1 (cancelado/aguardando pagamento ficam de fora)
+        self.assertEqual(self.product.total_vendidos, 5)
+
+        res = self.client.get(f'/accounts/seller-profile/{self.seller.id}/')
+        self.assertContains(res, 'Histórico na plataforma')
+        self.assertContains(res, '67%')
+
+        self.entrar_como('felipe@lojadech.com', 'vendedor')
+        res = self.client.get('/dashboard/')
+        self.assertContains(res, 'Histórico na plataforma')
+        self.assertContains(res, '67%')
+
+        res = self.client.get(f'/catalog/product/{self.product.id}/')
+        self.assertContains(res, 'Vendidos: <strong>5</strong>')
+
+    def test_reputacao_vendedor_sem_disputas(self):
+        from orders.services import estatisticas_vendedor
+        stats = estatisticas_vendedor(self.seller)
+        self.assertEqual(stats['total_vendas'], 0)
+        self.assertIsNone(stats['pct_disputas_vencidas'])
+        res = self.client.get(f'/accounts/seller-profile/{self.seller.id}/')
+        self.assertContains(res, 'Nenhuma disputa aberta contra este vendedor.')
+
     def test_pro013_tipos_de_usuario_independentes(self):
         # Vendedor não acessa telas de comprador nem de mediador
         self.entrar_como('felipe@lojadech.com', 'vendedor')

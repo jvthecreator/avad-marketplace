@@ -21,6 +21,8 @@
         </div>
         <div style="font-size: 13px; color: var(--text-muted); display: flex; gap: 16px;">
           <span>⭐ <strong>{{ avg_note }}</strong> ({{ total }} avaliações)</span>
+          <span>🛒 <strong>{{ stats.total_vendas }}</strong> venda{{ stats.total_vendas|pluralize }}</span>
+          <span>⚖️ <strong>{{ stats.total_disputas }}</strong> disputa{{ stats.total_disputas|pluralize }}{% if stats.pct_disputas_vencidas is not None %} ({{ stats.pct_disputas_vencidas }}% vencidas){% endif %}</span>
           <span>📦 <strong>{{ products.count }}</strong> anúncios ativos</span>
           <span>📅 Membro desde {{ seller.date_joined|date:"M/Y" }}</span>
         </div>
@@ -75,6 +77,8 @@
         </div>
       </div>
     </div>
+
+    {% include "accounts/_seller_reputation.html" %}
   </div>
 
   <!-- AVALIAÇÕES E COMENTÁRIOS COM FILTROS -->

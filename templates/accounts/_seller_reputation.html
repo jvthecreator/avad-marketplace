@@ -1,0 +1,32 @@
+{# Reputação do vendedor: vendas e disputas desde a entrada na plataforma. Espera "stats" (orders.services.estatisticas_vendedor). #}
+<div class="card" style="margin-bottom: 24px;">
+  <h3 class="card-title" style="margin-bottom: 16px;">Histórico na plataforma</h3>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 14px;">
+    <div style="background: #F9FAFB; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: center;">
+      <div style="font-size: 26px; font-weight: 800; color: var(--text-main); line-height: 1;">{{ stats.total_vendas }}</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Vendas realizadas</div>
+    </div>
+    <div style="background: #F9FAFB; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: center;">
+      <div style="font-size: 26px; font-weight: 800; color: var(--text-main); line-height: 1;">{{ stats.total_disputas }}</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Disputas abertas</div>
+    </div>
+    <div style="background: #F9FAFB; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: center;">
+      <div style="font-size: 26px; font-weight: 800; line-height: 1; color: {% if stats.pct_disputas_vencidas is None %}var(--text-muted){% elif stats.pct_disputas_vencidas >= 50 %}#059669{% else %}#DC2626{% endif %};">
+        {% if stats.pct_disputas_vencidas is None %}—{% else %}{{ stats.pct_disputas_vencidas }}%{% endif %}
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Disputas vencidas</div>
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px;">
+    {% if stats.total_disputas %}
+      {{ stats.disputas_vencidas }} vencida{{ stats.disputas_vencidas|pluralize }} &bull;
+      {{ stats.disputas_perdidas }} perdida{{ stats.disputas_perdidas|pluralize }} &bull;
+      {{ stats.disputas_em_analise }} em análise.
+      A % considera apenas disputas já decididas pela mediação.
+    {% else %}
+      Nenhuma disputa aberta contra este vendedor.
+    {% endif %}
+  </div>
+</div>
