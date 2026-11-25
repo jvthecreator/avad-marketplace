@@ -211,7 +211,7 @@
               {% for ev in evidences %}
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
                   <div>
-                    <strong style="font-size: 13px; display: block;">{{ ev.descricao|default:"Arquivo de Evidência" }}</strong>
+                    <strong style="font-size: 13px; display: block;">{{ ev.titulo }}</strong>
                     <span style="font-size: 11px; color: var(--text-muted);">Enviado por {{ ev.autor.profile.nome|default:ev.autor.username }} em {{ ev.criado_em|date:"d/m/Y H:i" }}</span>
                   </div>
                   <a href="{{ ev.arquivo.url }}" target="_blank" class="btn btn-outline btn-sm">Abrir arquivo</a>
@@ -235,12 +235,23 @@
               Responder às partes como Mediador Oficial:
             </label>
             {{ message_form.mensagem }}
+            {% if message_form.mensagem.errors %}<div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ message_form.mensagem.errors.0 }}</div>{% endif %}
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer;">
-              📎 Anexo oficial: {{ message_form.evidencia }}
-            </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 12px;" for="{{ message_form.evidencia.id_for_label }}">📎 Anexo oficial (opcional)</label>
+              {{ message_form.evidencia }}
+              {% if message_form.evidencia.errors %}<div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ message_form.evidencia.errors.0 }}</div>{% endif %}
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 12px;" for="{{ message_form.nome_evidencia.id_for_label }}">Nome da evidência</label>
+              {{ message_form.nome_evidencia }}
+              {% if message_form.nome_evidencia.errors %}<div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ message_form.nome_evidencia.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
             <button type="submit" class="btn btn-primary">
               Enviar Mensagem às Partes
             </button>

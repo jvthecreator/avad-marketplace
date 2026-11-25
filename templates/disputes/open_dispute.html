@@ -78,9 +78,13 @@
       <div class="form-group">
         <label class="form-label" for="{{ form.evidencia.id_for_label }}">Evidência inicial (JPG, PNG, MP4 até 10 MB)</label>
         {{ form.evidencia }}
-        {% if form.evidencia.errors %}
-          <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.evidencia.errors.0 }}</div>
-        {% endif %}
+        {% if form.evidencia.errors %}<div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.evidencia.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.nome_evidencia.id_for_label }}">Nome da evidência <span style="font-weight: 400; color: var(--text-muted);">(obrigatório se anexar arquivo)</span></label>
+        {{ form.nome_evidencia }}
+        {% if form.nome_evidencia.errors %}<div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ form.nome_evidencia.errors.0 }}</div>{% endif %}
       </div>
 
       <div style="display: flex; gap: 12px; margin-top: 24px;">

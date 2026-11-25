@@ -68,8 +68,17 @@ class DisputeEvidence(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     arquivo = models.FileField(upload_to='evidences/')
     tipo = models.CharField(max_length=10, blank=True)
-    descricao = models.CharField(max_length=200, blank=True)
+    nome = models.CharField(max_length=100, blank=True)  # nome dado por quem anexou (ex.: "Foto da caixa amassada")
+    descricao = models.CharField(max_length=200, blank=True)  # contexto automático (ex.: "Anexo enviado por Fe")
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['criado_em']
+
     def __str__(self):
-        return f"Evidência - {self.disputa.codigo}"
+        return f"{self.titulo} - {self.disputa.codigo}"
+
+    @property
+    def titulo(self):
+        """Nome escolhido por quem anexou; evidências antigas (sem nome) usam a descrição automática."""
+        return self.nome or self.descricao or 'Arquivo de evidência'

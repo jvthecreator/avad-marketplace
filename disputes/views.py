@@ -11,6 +11,22 @@ from notifications.services import notificar_disputa_aberta, notificar_mensagem_
 import random
 
 
+def salvar_evidencia(form, disputa, autor, descricao):
+    """Salva o arquivo anexado no formulário (se houver) com o nome que a pessoa deu à evidência."""
+    arquivo = form.cleaned_data.get('evidencia')
+    if not arquivo:
+        return None
+    ext = arquivo.name.rsplit('.', 1)[-1].lower() if '.' in arquivo.name else ''
+    return DisputeEvidence.objects.create(
+        disputa=disputa,
+        autor=autor,
+        arquivo=arquivo,
+        tipo=ext,
+        nome=form.cleaned_data.get('nome_evidencia', ''),
+        descricao=descricao,
+    )
+
+
 @login_required
 def open_dispute_view(request, order_id):
     order = get_object_or_404(Order, pk=order_id, comprador=request.user)
@@ -46,17 +62,7 @@ def open_dispute_view(request, order_id):
                 mensagem=form.cleaned_data['descricao']
             )
 
-            # Upload evidence
-            evidencia = form.cleaned_data.get('evidencia')
-            if evidencia:
-                ext = evidencia.name.split('.')[-1].lower() if '.' in evidencia.name else ''
-                DisputeEvidence.objects.create(
-                    disputa=dispute,
-                    autor=request.user,
-                    arquivo=evidencia,
-                    tipo=ext,
-                    descricao='Evidência inicial anexada pelo comprador'
-                )
+            salvar_evidencia(form, dispute, request.user, 'Evidência inicial anexada pelo comprador')
 
             # Bloqueio imediato do repasse financeiro ao vendedor (Custódia/Escrow)
             if hasattr(order, 'split'):
@@ -104,16 +110,8 @@ def dispute_detail_view(request, dispute_id):
                 mensagem=msg_text
             )
 
-            evidencia = form.cleaned_data.get('evidencia')
-            if evidencia:
-                ext = evidencia.name.split('.')[-1].lower() if '.' in evidencia.name else ''
-                DisputeEvidence.objects.create(
-                    disputa=dispute,
-                    autor=request.user,
-                    arquivo=evidencia,
-                    tipo=ext,
-                    descricao=f'Anexo enviado por {request.user.profile.nome if hasattr(request.user, "profile") else request.user.username}'
-                )
+            autor = request.user.profile.nome if hasattr(request.user, 'profile') else request.user.username
+            salvar_evidencia(form, dispute, request.user, f'Anexo enviado por {autor} ({papel})')
 
             notificar_mensagem_disputa(dispute, papel)
             messages.success(request, 'Mensagem enviada com sucesso!')
@@ -190,16 +188,7 @@ def mediation_detail_view(request, dispute_id):
                     papel='mediador',
                     mensagem=message_form.cleaned_data['mensagem']
                 )
-                evidencia = message_form.cleaned_data.get('evidencia')
-                if evidencia:
-                    ext = evidencia.name.split('.')[-1].lower() if '.' in evidencia.name else ''
-                    DisputeEvidence.objects.create(
-                        disputa=dispute,
-                        autor=request.user,
-                        arquivo=evidencia,
-                        tipo=ext,
-                        descricao='Documento anexado pela Mediação'
-                    )
+                salvar_evidencia(message_form, dispute, request.user, 'Documento anexado pela Mediação')
                 notificar_mensagem_disputa(dispute, 'mediador')
                 messages.success(request, 'Mensagem oficial da mediação enviada.')
                 return redirect('disputes:mediation_detail', dispute_id=dispute.id)
